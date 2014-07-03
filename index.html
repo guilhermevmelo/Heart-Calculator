@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name=​"viewport" content=​"width=device-width, initial-scale=1">
+		
+		<title>Heart Calculator</title>
+		
+		<link rel="stylesheet" href="styles/base-all.css" media="all">
+		
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		<script src="scripts/main.js"></script>
+	</head>
+	
+	<body>
+		<div id="Page">
+			<div id="Main">
+				<h1>The Heart Calculator</h1>
+				
+				<section id="Introduction">
+					<h2>Introduction</h2>
+					<p>Pellentesque et interdum ligula. Nulla congue nisl et metus varius consequat. Quisque ut elementum justo, ac adipiscing ligula. Duis at gravida ligula. Phasellus eros sem, scelerisque in justo eu, pellentesque tincidunt turpis. Nunc ut nunc ut diam suscipit dapibus. Nam vel aliquam augue. Fusce facilisis vulputate malesuada. Duis sodales faucibus enim, in egestas mauris facilisis et. Cras dictum, leo et feugiat blandit, arcu nulla rhoncus metus, ac faucibus erat augue ut erat. Sed interdum egestas ipsum, eu elementum metus hendrerit quis. Integer odio nibh, gravida at tempus vitae, rhoncus vitae lorem.</p>
+				</section><!-- #Introduction -->
+				
+				<section id="Step1">
+					<h2>Step 1: Risk factors</h2>
+					<form>
+						<fieldset>
+							<label>Gender:</label>
+							
+							<label for="frm_gender_m">Male:</label>
+							<input type="radio" name="frm_gender" id="frm_gender_m" value="male">
+							
+							<label for="frm_gender_f">Female:</label>
+							<input type="radio" name="frm_gender" id="frm_gender_f" value="female">
+						</fieldset>
+						
+						<fieldset>
+							<label for="frm_age">What's your age?</label>
+							<input type="number" min="18" max="99" value="18" name="frm_age" id="frm_age">
+							years
+						</fieldset>
+						
+						<fieldset>
+							<label>Do you belong to any high risk ethnic group?:</label>
+							
+							<input type="radio" name="frm_risk" id="frm_risk_y" value="Yes">
+							<label for="frm_risk_y">Yes</label>							
+							
+							<input type="radio" name="frm_risk" id="frm_risk_n" value="No">
+							<label for="frm_risk_n">No</label>
+							
+							<p class="details">The following ethnic groups may be at a higher risk:</p>
+						</fieldset>
+						
+						<fieldset>
+							<label>What's your average blood pressure?</label>
+							<input type="number" value="120" name="frm_bp_sys" id="frm_bp_sys" title="Average systolic blood pressure">
+							/
+							<input type="number" value="80" name="frm_bp_dia" id="frm_bp_dia" title="Average diastolic blood pressure">
+							mmHg
+						</fieldset>
+						
+						<fieldset>
+							<label for="frm_tc_hdl">What's your TC/HDL ratio?</label>
+							<input type="number" value="4.5" step="0.2" name="frm_tc_hdl" id="frm_tc_hdl">
+						</fieldset>
+						
+					</form>
+				</section><!-- #Step1 -->
+				<!--
+				<section id="Step2">
+				</section><!-- #Step2 --
+				-->
+				<section id="Result">
+					<h2>Result</h2>
+				</section><!-- #Result -->
+			</div><!-- #Main -->
+		</div><!-- #Page -->
+	</body>
+</html>​

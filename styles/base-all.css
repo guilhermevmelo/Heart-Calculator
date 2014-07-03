@@ -1,0 +1,59 @@
+/**
+ * File:	/styles/base-all.css
+ * Author:	Guilherme Vieira
+ * Date:	29/06/2014
+ */
+
+/** Imports **/
+@import url(http://fonts.googleapis.com/css?family=Playfair+Display:400,400italic|Open+Sans);
+
+/** Browser default styles reset **/
+* {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: 'Open Sans', sans-serif;
+	font-size: 14px;
+}
+
+::selection { color: white; background-color: black; }
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: 'Playfair Display', serif;
+	font-weight: normal;
+}
+
+h1 {
+	font-size: 2.3em;
+}
+
+/** Structural elements **/
+
+#Page {
+	
+}
+
+#Main {
+	max-width: 800px;
+	margin: 0 auto;
+	padding: 10px;
+	
+}
+
+@media all and (max-width: 820px) {
+	#Main {
+		margin: 0 10px;
+	}
+}
+
+/** Form Elements **/
