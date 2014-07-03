@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="utf-8">
 		<meta name=​"viewport" content=​"width=device-width, initial-scale=1">
@@ -28,11 +28,11 @@
 						<fieldset>
 							<label>Gender:</label>
 							
-							<label for="frm_gender_m">Male:</label>
 							<input type="radio" name="frm_gender" id="frm_gender_m" value="male">
+							<label for="frm_gender_m">Male</label>
 							
-							<label for="frm_gender_f">Female:</label>
 							<input type="radio" name="frm_gender" id="frm_gender_f" value="female">
+							<label for="frm_gender_f">Female</label>
 						</fieldset>
 						
 						<fieldset>
@@ -42,7 +42,7 @@
 						</fieldset>
 						
 						<fieldset>
-							<label>Do you belong to any high risk ethnic group?:</label>
+							<label>Do you belong to any high risk ethnic group?</label>
 							
 							<input type="radio" name="frm_risk" id="frm_risk_y" value="Yes">
 							<label for="frm_risk_y">Yes</label>							
@@ -66,6 +66,29 @@
 							<input type="number" value="4.5" step="0.2" name="frm_tc_hdl" id="frm_tc_hdl">
 						</fieldset>
 						
+						<fieldset>
+							<label>Are you a current smoker or have you recently quit?</label>
+							
+							<input type="radio" name="frm_smoke" id="frm_smoke_y" value="Yes">
+							<label for="frm_smoke_y">Yes</label>							
+							
+							<input type="radio" name="frm_smoke" id="frm_smoke_n" value="No">
+							<label for="frm_smoke_n">No</label>
+							
+							<p class="details">Recently quit is anytime within the last 12 months.</p>
+						</fieldset>
+						
+						<fieldset>
+							<label>Do you have diabetes?</label>
+							
+							<input type="radio" name="frm_diabetes" id="frm_diabetes_y" value="Yes">
+							<label for="frm_diabetes_y">Yes</label>							
+							
+							<input type="radio" name="frm_diabetes" id="frm_diabetes_n" value="No">
+							<label for="frm_diabetes_n">No</label>
+							
+							<p class="details">Ether Type 1, Type 2 or Type unknown diabetes. Not gestational diabetes.</p>
+						</fieldset>
 					</form>
 				</section><!-- #Step1 -->
 				<!--
@@ -74,6 +97,7 @@
 				-->
 				<section id="Result">
 					<h2>Result</h2>
+					<canvas id="ResultCanvas"></canvas>
 				</section><!-- #Result -->
 			</div><!-- #Main -->
 		</div><!-- #Page -->

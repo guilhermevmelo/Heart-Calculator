@@ -57,3 +57,17 @@ h1 {
 }
 
 /** Form Elements **/
+fieldset {
+	border: 1px solid black;
+	margin: 10px auto;
+	padding: 5px;
+}
+
+/** Drawing Canvas **/
+#ResultCanvas {
+	width: 100%;
+	
+	display: block;
+	margin: 0 auto;
+	border: 1px dotted black;
+}
