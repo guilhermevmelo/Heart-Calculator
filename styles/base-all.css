@@ -6,6 +6,7 @@
 
 /** Imports **/
 @import url(http://fonts.googleapis.com/css?family=Playfair+Display:400,400italic|Open+Sans);
+@import url(fonts/JosefinSans/stylesheet.css);
 
 /** Browser default styles reset **/
 * {
@@ -14,8 +15,9 @@
 }
 
 body {
-	font-family: 'Open Sans', sans-serif;
-	font-size: 14px;
+	font-family: 'Josefin Sans', 'Open Sans', sans-serif;
+	font-size: 20px;
+	background: url(../images/noise_background_.png) repeat;
 }
 
 ::selection { color: white; background-color: black; }
@@ -59,15 +61,21 @@ h1 {
 /** Form Elements **/
 fieldset {
 	border: 1px solid black;
-	margin: 10px auto;
+	margin: 10px auto;	
 	padding: 5px;
+	background: #fff;
+}
+
+label:first-child {
+	display: block;
 }
 
 /** Drawing Canvas **/
 #ResultCanvas {
 	width: 100%;
-	
+	background-color: #fff;
 	display: block;
 	margin: 0 auto;
-	border: 1px dotted black;
+	border: 1px solid black;
+	box-shadow: 0 5px 15px rgba(0,0, 0, 0.5);
 }

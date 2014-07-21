@@ -1,0 +1,23 @@
+@font-face {
+    font-family: 'Josefin Sans';
+    src: url('josefinsans-regular-webfont.eot');
+    src: url('josefinsans-regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('josefinsans-regular-webfont.woff') format('woff'),
+         url('josefinsans-regular-webfont.ttf') format('truetype'),
+         url('josefinsans-regular-webfont.svg#josefin_sansregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'Josefin Sans';
+    src: url('josefinsans-light-webfont.eot');
+    src: url('josefinsans-light-webfont.eot?#iefix') format('embedded-opentype'),
+         url('josefinsans-light-webfont.woff') format('woff'),
+         url('josefinsans-light-webfont.ttf') format('truetype'),
+         url('josefinsans-light-webfont.svg#josefin_sanslight') format('svg');
+    font-weight: light;
+    font-style: normal;
+
+}
