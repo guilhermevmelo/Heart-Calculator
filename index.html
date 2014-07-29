@@ -15,18 +15,23 @@
 	<body>
 		<div id="Page">
 			<div id="Main">
-				<h1>The Heart Calculator</h1>
+				<section id="Title">
+					<h1>The Heart Calculator</h1>
 				
-				<section id="Introduction">
+					<p class="nextStepLinkContainer"><a href="#" class="nextStepLink button">Begin</a></p>
+				</section><!-- #Title-->
+				
+				<section id="Introduction" >
 					<h2>Introduction</h2>
 					<p>Pellentesque et interdum ligula. Nulla congue nisl et metus varius consequat. Quisque ut elementum justo, ac adipiscing ligula. Duis at gravida ligula. Phasellus eros sem, scelerisque in justo eu, pellentesque tincidunt turpis. Nunc ut nunc ut diam suscipit dapibus. Nam vel aliquam augue. Fusce facilisis vulputate malesuada. Duis sodales faucibus enim, in egestas mauris facilisis et. Cras dictum, leo et feugiat blandit, arcu nulla rhoncus metus, ac faucibus erat augue ut erat. Sed interdum egestas ipsum, eu elementum metus hendrerit quis. Integer odio nibh, gravida at tempus vitae, rhoncus vitae lorem.</p>
+					<p class="nextStepLinkContainer"><a href="#" class="nextStepLink button">Collect your risk factors</a></p>
 				</section><!-- #Introduction -->
 				
 				<section id="Step1">
 					<h2>Step 1: Risk factors</h2>
 					<form>
 						<fieldset>
-							<label>Gender:</label>
+							<label>What's your gender?</label>
 							
 							<input type="radio" name="frm_gender" id="frm_gender_m" value="male">
 							<label for="frm_gender_m">Male</label>
@@ -36,8 +41,8 @@
 						</fieldset>
 						
 						<fieldset>
-							<label for="frm_age">What's your age?</label>
-							<input type="number" min="18" max="99" value="18" name="frm_age" id="frm_age">
+							<label for="frm_age">How old are you?</label>
+							<input type="number" min="18" max="99" value="18" size="2" name="frm_age" id="frm_age">
 							years
 						</fieldset>
 						
@@ -55,15 +60,16 @@
 						
 						<fieldset>
 							<label>What's your average blood pressure?</label>
-							<input type="number" value="120" name="frm_bp_sys" id="frm_bp_sys" title="Average systolic blood pressure">
+							<input type="number" min="70" max="190" value="120" name="frm_bp_sys" id="frm_bp_sys" title="Average systolic blood pressure">
 							/
-							<input type="number" value="80" name="frm_bp_dia" id="frm_bp_dia" title="Average diastolic blood pressure">
+							<input type="number" min="40" max="100" value="80" name="frm_bp_dia" id="frm_bp_dia" title="Average diastolic blood pressure">
 							mmHg
 						</fieldset>
 						
 						<fieldset>
 							<label for="frm_tc_hdl">What's your TC/HDL ratio?</label>
-							<input type="number" value="4.5" step="0.2" name="frm_tc_hdl" id="frm_tc_hdl">
+							<input type="range" min="4" max="8" value="4.5" step="0.1" name="frm_tc_hdl" id="frm_tc_hdl">
+							<span id="frm_tc_hdl_val">4.5</span>
 						</fieldset>
 						
 						<fieldset>
@@ -87,18 +93,27 @@
 							<input type="radio" name="frm_diabetes" id="frm_diabetes_n" value="No">
 							<label for="frm_diabetes_n">No</label>
 							
-							<p class="details">Ether Type 1, Type 2 or Type unknown diabetes. Not gestational diabetes.</p>
+							<p class="details">Either Type 1, Type 2 or Type unknown diabetes. Not gestational diabetes.</p>
 						</fieldset>
 					</form>
+					<p class="nextStepLinkContainer" style="display:none;"><a href="#" class="nextStepLink button">Calculate</a></p>
+				
 				</section><!-- #Step1 -->
 				<!--
 				<section id="Step2">
 				</section><!-- #Step2 --
 				-->
-				<section id="Result">
+				<section id="Result"   class="currentStep">
 					<h2>Result</h2>
-					<canvas id="ResultCanvas"></canvas>
+					<canvas id="ResultCanvas">Your browser does not support canvas drawing yet.</canvas>
 				</section><!-- #Result -->
+				<nav>
+					<ul>
+						<li><a href="#">&bull;</a></li>
+						<li><a href="#">&bull;</a></li>
+						<li><a href="#">&bull;</a></li>
+					</ul>
+				</nav>
 			</div><!-- #Main -->
 		</div><!-- #Page -->
 	</body>
