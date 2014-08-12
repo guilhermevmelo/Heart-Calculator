@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<meta name=​"viewport" content=​"width=device-width,initial-scale=1,maximum-scale=1">
+		<meta name="viewport" content="width=device-width, user-scalable=no">
 		
 		<title>Heart Calculator</title>
 		
@@ -14,22 +14,29 @@
 	
 	<body>
 		<div id="Page">
-			<div id="Main">
-				<section id="Title">
-					<h1>The Heart Calculator</h1>
+			<header>
 				
-					<p class="nextStepLinkContainer"><a href="#" class="nextStepLink button">Begin</a></p>
+			</header>
+			<div id="Main">
+				<section id="Title" class="currentStep">
+					<h1>The <span class="redShadow">Heart</span> Calculator</h1>
+				
+					<p class="nextStepLinkContainer">
+						<a href="#/Login" class="button" title="Use data already sent and keep track of your heart health">I already have an account</a>
+						<a href="#/SignUp" class="button" id="signup_link" title="Keep track of you heart health">Create an account</a>
+						<a href="#/Intro" class="nextStepLink button" title="Just use the application">Begin without registering</a>
+					</p>
 				</section><!-- #Title-->
 				
 				<section id="Introduction" >
 					<h2>Introduction</h2>
 					<p>Pellentesque et interdum ligula. Nulla congue nisl et metus varius consequat. Quisque ut elementum justo, ac adipiscing ligula. Duis at gravida ligula. Phasellus eros sem, scelerisque in justo eu, pellentesque tincidunt turpis. Nunc ut nunc ut diam suscipit dapibus. Nam vel aliquam augue. Fusce facilisis vulputate malesuada. Duis sodales faucibus enim, in egestas mauris facilisis et. Cras dictum, leo et feugiat blandit, arcu nulla rhoncus metus, ac faucibus erat augue ut erat. Sed interdum egestas ipsum, eu elementum metus hendrerit quis. Integer odio nibh, gravida at tempus vitae, rhoncus vitae lorem.</p>
-					<p class="nextStepLinkContainer"><a href="#" class="nextStepLink button">Collect your risk factors</a></p>
+					<p class="nextStepLinkContainer"><a href="#/Step1" class="nextStepLink button">Collect your risk factors</a></p>
 				</section><!-- #Introduction -->
 				
 				<section id="Step1">
 					<h2>Step 1: Risk factors</h2>
-					<form>
+					<form name="Step1_form">
 						<fieldset>
 							<label>What's your gender?</label>
 							
@@ -96,17 +103,73 @@
 							<p class="details">Either Type 1, Type 2 or Type unknown diabetes. Not gestational diabetes.</p>
 						</fieldset>
 					</form>
-					<p class="nextStepLinkContainer" style="display:none;"><a href="#" class="nextStepLink button">Calculate</a></p>
+					<p class="nextStepLinkContainer" style="display:none;"><a href="#/Result" class="nextStepLink button">Calculate</a></p>
 				
 				</section><!-- #Step1 -->
-				<!--
-				<section id="Step2">
-				</section><!-- #Step2 --
-				-->
-				<section id="Result"   class="currentStep">
+				
+				<section id="Result">
 					<h2>Result</h2>
-					<canvas id="ResultCanvas">Your browser does not support canvas drawing yet.</canvas>
+					<canvas id="ResultCanvas" width="800">Your browser does not support canvas drawing yet.</canvas>
 				</section><!-- #Result -->
+				
+				<section id="SignUp">
+					<h2>We need some data...</h2>
+					<form name="SignUp_form">
+						<h3>...to create your account...</h3>
+						<fieldset>
+							<label for="snp_name">What's your name?</label>
+							<input type="text" name="snp_name" id="snp_name">
+						</fieldset>
+						
+						<fieldset>
+							<label for="snp_email">What's your email?</label>
+							<input type="email" name="snp_email" id="snp_email">
+						</fieldset>
+						
+						<fieldset>
+							<label for="snp_password">What password would you like to use?</label>
+							<input type="password" name="snp_password" id="snp_password">
+						</fieldset>
+						
+						<h3>...and about you</h3>
+						<fieldset>
+							<label>What's your gender?</label>
+							
+							<input type="radio" name="snp_gender" id="snp_gender_m" value="m" class="gender">
+							<label for="snp_gender_m">Male</label>
+							
+							<input type="radio" name="snp_gender" id="snp_gender_f" value="f" class="gender">
+							<label for="snp_gender_f">Female</label>
+						</fieldset>
+						
+						<fieldset>
+							<label for="snp_birthday">When were you born?</label>
+							<input type="date" name="snp_birthday" id="snp_birthday">
+						</fieldset>
+						
+						<fieldset>
+							<label>Do you belong to any high risk ethnic group?</label>
+							
+							<input type="radio" name="snp_risk" id="snp_risk_y" value="Yes" class="risk">
+							<label for="snp_risk_y">Yes</label>							
+							
+							<input type="radio" name="snp_risk" id="snp_risk_n" value="No" class="risk">
+							<label for="snp_risk_n">No</label>
+							
+							<p class="details">The following ethnic groups may be at a higher risk:</p>
+						</fieldset>
+					</form>
+					<p class="nextStepLinkContainer"><a href="#" class="button">Create account</a></p>
+				
+				</section><!-- #SignUp -->
+				
+				<section id="SignUpConfirmation">
+					<h2>Half way done!</h2>
+					<p>We have just created an account for you. We have also sent a confirmation email. This email has a link you need to follow in order to become able to log into our application.</p>
+					<p>It may take a while to the email arrive.</p>
+					<p class="nextStepLinkContainer"><a href="#" class="button">Return to title screen</a></p>
+				</section>
+				
 				<nav>
 					<ul>
 						<li><a href="#">&bull;</a></li>
@@ -117,4 +180,5 @@
 			</div><!-- #Main -->
 		</div><!-- #Page -->
 	</body>
-</html>​
+</html>
+​

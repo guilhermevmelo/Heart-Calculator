@@ -37,7 +37,8 @@ function Graph(definitions) {
 		this.h = parseInt(this.w * this.ratioHW);
 		this.canvas.style.height = this.h + "px";
 		
-		//Debug: console.log("this.w:", this.w, "this.h:", this.h);
+		//Debug:
+		console.log("this.w:", this.w, "this.h:", this.h);
 		
 		this.canvas.width = this.w;
 		this.canvas.height = this.h;
@@ -156,6 +157,7 @@ function Graph(definitions) {
 		context.scale(1, -1);
 		context.beginPath();
 		context.rect(0, 1, this.drawable.w, this.drawable.h-1);
+		console.log("clip:", this.drawable.w, this.drawable.h-1);
 		context.clip();
 		
 		context.beginPath();
@@ -166,9 +168,17 @@ function Graph(definitions) {
 		context.shadowColor	  = "#c4c4c4";
 		context.shadowBlur = 2;
 		
-		for (var i = settings.from * this.xDotDist; i <= settings.to * this.xDotDist; i++/* += this.xDotDist*/){
-			//if (settings.f(i / this.xDotDist) * this.yDotDist <= this.limit.y*this.drawable.h) 
-				context.lineTo(i, settings.f(i / this.xDotDist) * this.yDotDist);
+		for (var i = settings.from * this.xDotDist; i <= settings.to * this.xDotDist; i += this.xDotDist){
+			context.lineTo(i, settings.f(i / this.xDotDist) * this.yDotDist);
+			//Debug: console.log(i, parseInt(i/this.xDotDist));
+			
+			if (parseInt(i/this.xDotDist) % 9 == 0) {
+				context.save();
+				context.scale(1, -1);
+				var f_i = (settings.f(i / this.xDotDist) * this.yDotDist);
+				context.fillText("("+parseInt(i / this.xDotDist)+", "+parseInt(f_i/this.yDotDist)+")", i,  -f_i);
+				context.restore();
+			}
 		}
 		
 		
@@ -200,7 +210,7 @@ $(window).load(function() {
 	var graph = new Graph({
 		canvasId: 	"ResultCanvas",
 		ratioWH: 	1.5,
-		resolution: {x: 95, y: 90},
+		resolution: {x: 90, y: 90},
 		axisOrigin: {x: 0.03, y: 0.05},
 		origin: 	{x: 0.1480, y: 0.0},
 		limit: 		{x: 0.8600, y: 0.95}
@@ -232,7 +242,58 @@ $(window).load(function() {
 		$("#Step1").fadeOut('slow', function() {
 			$("#Result").fadeIn('slow');
 			graph.initialize();
-			graph.redraw();
+			//graph.redraw();
+			graph.drawFunction({
+				f: function(x) {
+					var a = parseFloat(document.getElementById("frm_bp_sys").value);
+					var b = parseFloat(document.getElementById("frm_tc_hdl").value);
+					//Debug: console.log('a', a, 'b', b);
+					return a*x/2000+b*x*x/1700 + 2;
+				},
+				//f: function(x) {return x;},
+				//f: function(x) {return 120*x/2000+4.5*x*x/1700 + 2;},
+				color: '#FF8B3F',
+				from: parseInt( document.getElementById("frm_age").value),
+				to: 90
+			}, true);
+		});
+	});
+	
+	$("#signup_link").click(function() {
+		$("#Title").fadeOut('slow', function() {
+			$("#SignUp").fadeIn();
+		});
+	});
+	
+	$("#SignUp .nextStepLinkContainer a").click(function() {
+		/**
+		 * TODO Form validation before submitting it to action.php
+		 * TODO Add encryption to password before posting it to action.php
+		 */
+		$.ajax({
+			type: 'POST',
+			url: "action.php",
+			data : {
+				q: 'create_user',
+				name: $("#snp_name").val(),
+				email: $("#snp_email").val(),
+				password: $("#snp_password").val(),
+				birthday: $("#snp_birthday").val(),
+				gender: $(".gender:checked").val(),
+				risk: $(".risk:checked").val()
+			}
+		}).done(function(r) {
+			if (r == "ok") {
+				$("#SignUp").fadeOut('slow', function() {
+					$("#SignUpConfirmation").fadeIn('slow');
+				});
+			}
+		});
+	});
+	
+	$("#SignUpConfirmation .nextStepLinkContainer a").click(function() {
+		$("#SignUpConfirmation").fadeOut('slow', function() {
+			$("#Title").fadeIn('slow');
 		});
 	});
 	
@@ -241,17 +302,12 @@ $(window).load(function() {
 	graph.redraw();
 	/** end **/
 	
+	$("#Result").hide();
+	
 	/** Update the label accordingly to the slider **/
 	$("#frm_tc_hdl").change(function() {
 		$("#frm_tc_hdl_val").html($("#frm_tc_hdl").val());
 	});
 	
-	graph.drawFunction({
-		f: function(x) {return x*x*x/84 - x*x/14 + 29*x/84;},
-		color: '#A236D9',
-		from: 0,
-		to: 90
-	}, true);
-	
 	//Debug: console.log(graph);
-});;
+});
