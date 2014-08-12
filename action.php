@@ -1,4 +1,10 @@
 <?php
+/**
+ * file: action.php
+ * 
+ */
+
+session_start();
 require_once 'classes/User.DAO.class.php';
 
 $q = $_POST["q"];

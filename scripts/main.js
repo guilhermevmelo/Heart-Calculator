@@ -206,8 +206,124 @@ function validate() {
 		$("#Step1 p.nextStepLinkContainer").fadeIn('slow');
 }
 
+/**
+ * Hash control
+ */
+function parseHash() {
+	var hash = location.hash;
+	
+	switch(hash) {
+		case "#/Login":
+			//Debug: console.log("Login");
+			$("#Login").fadeIn('slow');
+			break;
+		
+		case "#/SignUp":
+			//Debug: console.log("SignUp");
+			if ($(".currentStep").length == 0) {
+				$("#SignUp").fadeIn('slow').addClass("currentStep");
+			} else if (!$("#SignUp").hasClass("currentStep")) {
+				$(".currentStep").fadeOut('slow', function() {
+					$(".currentStep").removeClass("currentStep");
+					$("#SignUp").fadeIn('slow').addClass("currentStep");
+				});
+			}
+			break;
+			
+		case "#/Intro":
+			//Debug: console.log("Intro");
+			if ($(".currentStep").length == 0) {
+				$("#Introduction").fadeIn('slow').addClass("currentStep");
+			} else if (!$("#Introduction").hasClass("currentStep")) {
+				$(".currentStep").fadeOut('slow', function() {
+					$(".currentStep").removeClass("currentStep");
+					$("#Introduction").fadeIn('slow').addClass("currentStep");
+				});
+			}
+			break;
+		
+		case "#/Step1":
+			//Debug: console.log("Step 1");
+			if ($(".currentStep").length == 0) {
+				$("#Step1").fadeIn('slow').addClass("currentStep");
+			} else if (!$("#Step1").hasClass("currentStep")) {
+				$(".currentStep").fadeOut('slow', function() {
+					$(".currentStep").removeClass("currentStep");
+					$("#Step1").fadeIn('slow').addClass("currentStep");
+				});
+			}
+			break;
+			
+		case "#/Result":
+			/**
+			 * TODO Validate to only show the result if the Step 1 has been completed
+			 * TODO Add this new state to the user profile, if logged in
+			 */
+			//Debug: console.log("Result");
+			if ($(".currentStep").length == 0) {
+				$("#Result").fadeIn('slow').addClass("currentStep");
+			} else if (!$("#Result").hasClass("currentStep")) {
+				$(".currentStep").fadeOut('slow', function() {
+					$(".currentStep").removeClass("currentStep");
+					$("#Result").fadeIn('slow').addClass("currentStep");
+					graph.initialize();
+					//graph.redraw();
+					graph.drawFunction({
+						f: function(x) {
+							var a = parseFloat(document.getElementById("frm_bp_sys").value);
+							var b = parseFloat(document.getElementById("frm_tc_hdl").value);
+							//Debug: console.log('a', a, 'b', b);
+							return a*x/2000+b*x*x/1700 + 2;
+						},
+						//f: function(x) {return x;},
+						//f: function(x) {return 120*x/2000+4.5*x*x/1700 + 2;},
+						color: '#FF8B3F',
+						from: parseInt( document.getElementById("frm_age").value),
+						to: 90
+					}, true);
+				});
+			}
+			break;
+		
+		case "#/Title":
+			//Debug: console.log("Title");
+			if ($(".currentStep").length == 0) {
+				$("#Title").fadeIn('slow').addClass("currentStep");
+			} else if (!$("#Title").hasClass("currentStep")) {
+				$(".currentStep").fadeOut('slow', function() {
+					$(".currentStep").removeClass("currentStep");
+					$("#Title").fadeIn('slow').addClass("currentStep");
+				});
+			}
+			break;
+		
+		case "#/Profile":
+			//Debug: console.log("Step 1");
+			if ($(".currentStep").length == 0) {
+				$("#Profile").fadeIn('slow').addClass("currentStep");
+			} else if (!$("#Profile").hasClass("currentStep")) {
+				$(".currentStep").fadeOut('slow', function() {
+					$(".currentStep").removeClass("currentStep");
+					$("#Profile").fadeIn('slow').addClass("currentStep");
+				});
+			}
+			break;	
+			
+		default:
+			console.log("Called default");
+			location.hash = "#/Title";
+			break;
+		
+	}
+}
+
+window.onhashchange = parseHash;
+window.onload = parseHash;
+
+var graph = null;
+
 $(window).load(function() {
-	var graph = new Graph({
+	graph = new Graph({
 		canvasId: 	"ResultCanvas",
 		ratioWH: 	1.5,
 		resolution: {x: 90, y: 90},
@@ -221,10 +337,18 @@ $(window).load(function() {
 		graph.redraw();
 	});
 	
-	$("input").change(function() {
+	$("#Step1 input").change(function() {
 		validate();
 	});
 	
+	
+	/** Substitute for hash control
+	$("#SignUpConfirmation .nextStepLinkContainer a").click(function() {
+		$("#SignUpConfirmation").fadeOut('slow', function() {
+			$("#Title").fadeIn('slow');
+		});
+	});
+
 	$("#Title a.nextStepLink").click(function() {
 		$("#Title").fadeOut('slow', function() {
 			$("#Introduction").fadeIn('slow');
@@ -265,6 +389,11 @@ $(window).load(function() {
 		});
 	});
 	
+	**/
+	
+	/**
+	 * The submit handler
+	 */
 	$("#SignUp .nextStepLinkContainer a").click(function() {
 		/**
 		 * TODO Form validation before submitting it to action.php
@@ -290,19 +419,13 @@ $(window).load(function() {
 			}
 		});
 	});
-	
-	$("#SignUpConfirmation .nextStepLinkContainer a").click(function() {
-		$("#SignUpConfirmation").fadeOut('slow', function() {
-			$("#Title").fadeIn('slow');
-		});
-	});
-	
+		
 	/** While styling the canvas **/
 	graph.initialize();
 	graph.redraw();
 	/** end **/
 	
-	$("#Result").hide();
+	//$("#Result").hide();
 	
 	/** Update the label accordingly to the slider **/
 	$("#frm_tc_hdl").change(function() {
