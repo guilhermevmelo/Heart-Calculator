@@ -215,7 +215,10 @@ function parseHash() {
 	switch(hash) {
 		case "#/Login":
 			//Debug: console.log("Login");
-			$("#Login").fadeIn('slow');
+			$("#LoginOverlay").fadeIn('slow');
+			$(":not(#Login)").click(function() {
+				$("#LoginOverlay").fadeOut('slow');
+			});
 			break;
 		
 		case "#/SignUp":

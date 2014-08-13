@@ -119,11 +119,11 @@ header {
 
 /** Form Elements **/
 fieldset {
-	//border: 1px solid black;
+	/*border: 1px solid black;*/
 	border: none;
 	margin: 10px auto;	
 	padding: 5px;
-	//background: #fff;
+	/*background: #fff;*/
 	position: relative;
 }
 
@@ -321,5 +321,6 @@ section {
 }
 
 #Result {
-	//display: block;
+	/*display: block;*/
 }
+
