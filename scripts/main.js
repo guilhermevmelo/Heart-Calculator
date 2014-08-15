@@ -4,6 +4,19 @@
  * Date:	29/06/2014
  */
 
+window.onhashchange = parseHash;
+window.onload = parseHash;
+
+var graph = null;
+var caller = null;
+
+function Alert(msg) {
+	$("#Alert p").html(msg);
+	$("#AlertOverlay").fadeIn('slow');
+}
+
+function rads(x) { return Math.PI * x / 180; }
+
 /**
  * 
  * @param definitions
@@ -32,7 +45,7 @@ function Graph(definitions) {
 	this.axisOrigin = definitions.axisOrigin;
 	
 	this.initialize = function() {
-		this.canvas.style.width = "100%";
+		this.canvas.style.width = "70%";
 		this.w = parseInt(window.getComputedStyle(this.canvas, null).width);
 		this.h = parseInt(this.w * this.ratioHW);
 		this.canvas.style.height = this.h + "px";
@@ -124,7 +137,7 @@ function Graph(definitions) {
 		var aux = 0.0337 * this.h;
 		context.font = aux + 'px "Shadows Into Light", sans-serif';
 		context.fillStyle = "#000";
-		context.fillText("Very High", (this.axisOrigin.x + 0.02)*this.w, 0.35*this.h);
+		context.fillText("Very\nHigh", (this.axisOrigin.x + 0.02)*this.w, 0.35*this.h);
 		context.fillText("50%", (this.axisOrigin.x + 0.845)*this.w, 0.09*this.h);
 		context.fillText("High", (this.axisOrigin.x + 0.02)*this.w, 0.65*this.h);
 		context.fillText("20%", (this.axisOrigin.x + 0.845)*this.w, 0.63*this.h);
@@ -142,7 +155,7 @@ function Graph(definitions) {
 	//Debug: console.log("this.xDotDist", this.xDotDist, "this.yDotDist", this.yDotDist);
 	
 	/*
-	 * {f, color, fromX, toX}
+	 * {f, color, fromX, toX, drawToday}
 	 */
 	this.drawFunction = function(settings, addToPool) {
 		var context = this.context;
@@ -172,6 +185,7 @@ function Graph(definitions) {
 			context.lineTo(i, settings.f(i / this.xDotDist) * this.yDotDist);
 			//Debug: console.log(i, parseInt(i/this.xDotDist));
 			
+			/* Draws the coordinates when x is a multiple of 9
 			if (parseInt(i/this.xDotDist) % 9 == 0) {
 				context.save();
 				context.scale(1, -1);
@@ -179,6 +193,7 @@ function Graph(definitions) {
 				context.fillText("("+parseInt(i / this.xDotDist)+", "+parseInt(f_i/this.yDotDist)+")", i,  -f_i);
 				context.restore();
 			}
+			*/
 		}
 		
 		
@@ -186,6 +201,23 @@ function Graph(definitions) {
 		context.lineWidth = 2;
 		context.stroke();
 		context.closePath();
+		
+		if (settings.drawToday) {
+			context.beginPath();
+			context.arc(settings.from * this.xDotDist,
+						settings.f(settings.from) * this.yDotDist,
+						5,
+						0,
+						rads(360),
+						false);
+			context.fillStyle = settings.color;
+			context.lineWidth = 4;
+			context.strokeStyle = '#fff';
+			context.shadowOffsetX = 0;
+			context.shadowOffsetY = 0;
+			context.stroke();
+			context.fill();
+		}
 		
 		context.restore();
 	};
@@ -203,7 +235,7 @@ function validate() {
 		$("input[name='frm_risk']").is(':checked') &&
 		$("input[name='frm_smoke']").is(':checked')&&
 		$("input[name='frm_diabetes']").is(':checked'))
-		$("#Step1 p.nextStepLinkContainer").fadeIn('slow');
+		$("#btn_ShowResult").fadeIn('slow');
 }
 
 /**
@@ -211,14 +243,49 @@ function validate() {
  */
 function parseHash() {
 	var hash = location.hash;
+	var pattern = new RegExp(/^#\/Confirm\//);
+	
+	console.log(pattern.test(hash));
+	
+	if (pattern.test(hash))
+		hash = "#/Confirm";
 	
 	switch(hash) {
 		case "#/Login":
 			//Debug: console.log("Login");
-			$("#LoginOverlay").fadeIn('slow');
-			$(":not(#Login)").click(function() {
-				$("#LoginOverlay").fadeOut('slow');
+			if ($(".currentStep").length == 0) {
+				$("#LoginOverlay").fadeIn('slow').addClass("currentStep");
+			} else if (!$("#LoginOverlay").hasClass("currentStep")) {
+				$(".currentStep").fadeOut('slow', function() {
+					$(".currentStep").removeClass("currentStep");
+					$("#LoginOverlay").delay(100).fadeIn('slow').addClass("currentStep");
+				});
+			}
+			break;
+			
+		case "#/ProcessLogin":
+			location.hash = '#/Title';
+			if (caller != 'login_btn') {
+				
+				break;
+			}
+			
+			/*$("#LoginOverlay").fadeOut('slow', function() {
+				$("#Title").fadeIn('slow');
+			});*/
+			
+			$.ajax({
+				type: 'POST',
+				url: 'action.php',
+				data: {
+					q: 'login',
+					email: $("#lgn_email").val(),
+					password: $("#lgn_password").val()
+				}
+			}).done(function(ans) {
+				Alert(ans);
 			});
+			
 			break;
 		
 		case "#/SignUp":
@@ -258,6 +325,8 @@ function parseHash() {
 			break;
 			
 		case "#/Result":
+			if (caller != 'step1')
+				location.hash = '#/Title';
 			/**
 			 * TODO Validate to only show the result if the Step 1 has been completed
 			 * TODO Add this new state to the user profile, if logged in
@@ -268,9 +337,58 @@ function parseHash() {
 			} else if (!$("#Result").hasClass("currentStep")) {
 				$(".currentStep").fadeOut('slow', function() {
 					$(".currentStep").removeClass("currentStep");
-					$("#Result").fadeIn('slow').addClass("currentStep");
+					$("#Result").fadeIn('slow', function() {
+						/**
+						 * Dynamically show and fill prediction controllers
+						 * after the section has faded in
+						 */
+						if ($("#frm_smoke_y").is(':checked'))
+							$("#fld_stopSmoke").fadeIn('fast');
+						else
+							$("#fld_startSmoke").fadeIn('fast');
+						
+						var delay = 1;
+						
+						if ($("#frm_diabetes_n").is(':checked'))
+							$("#fld_diabetes").delay(300*delay++).fadeIn('fast');
+						
+						$("#wif_tc_hdl").val($("#frm_tc_hdl").val());
+						$("#wif_tc_hdl_val").html($("#wif_tc_hdl").val());
+						$("#fld_tc_hdl").delay(300*delay++).fadeIn('fast');
+						
+						$("#wif_bp").val($("#frm_bp_sys").val());
+						$("#wif_bp_val").html($("#wif_bp").val());
+						$("#fld_bp").delay(300*delay).fadeIn('fast');
+						
+						$("#Result .nextStepLinkContainer a").click(function() {
+							$("#WhatIf fieldset").hide();
+						});
+						/**
+						 * Dynamically change prediction
+						 */
+						$("#WhatIf input").change(function() {
+							graph.initialize();
+							
+							graph.drawFunction({
+								f: function(x) {
+									var a = parseFloat($("#wif_bp").val());
+									var b = parseFloat($("#wif_tc_hdl").val());
+									//Debug: console.log('a', a, 'b', b);
+									return a*x/2000+b*x*x/1700 + 2;
+								},
+								color: '#E2389B',
+								from: parseInt( document.getElementById("frm_age").value),
+								to: 90,
+								drawToday: false
+							}, false);
+							
+							graph.redraw();
+						});
+					}).addClass("currentStep");
+					
 					graph.initialize();
 					//graph.redraw();
+					
 					graph.drawFunction({
 						f: function(x) {
 							var a = parseFloat(document.getElementById("frm_bp_sys").value);
@@ -282,7 +400,8 @@ function parseHash() {
 						//f: function(x) {return 120*x/2000+4.5*x*x/1700 + 2;},
 						color: '#FF8B3F',
 						from: parseInt( document.getElementById("frm_age").value),
-						to: 90
+						to: 90,
+						drawToday: true
 					}, true);
 				});
 			}
@@ -310,8 +429,30 @@ function parseHash() {
 					$("#Profile").fadeIn('slow').addClass("currentStep");
 				});
 			}
+			break;
+		
+		case "#/Confirm":
+			//Debug: console.log("Confirm");
+			var hashPieces = location.hash.split('/');
+			var uid = hashPieces[2];
+			location.hash = "#/Title";
+			$.ajax({
+				url: 'action.php',
+				type: 'GET',
+				data: {
+					q: 'confirm',
+					'uid': uid
+				}
+			}).done(function(ans) {
+				Alert(ans);
+			});
+			break;
+		
+		case "#/SignUpConfirmation":
+			if (caller != 'signupsubmit')
+				location.hash = '#/Title';
 			break;	
-			
+		
 		default:
 			console.log("Called default");
 			location.hash = "#/Title";
@@ -320,19 +461,14 @@ function parseHash() {
 	}
 }
 
-window.onhashchange = parseHash;
-window.onload = parseHash;
-
-var graph = null;
-
 $(window).load(function() {
 	graph = new Graph({
 		canvasId: 	"ResultCanvas",
 		ratioWH: 	1.5,
 		resolution: {x: 90, y: 90},
-		axisOrigin: {x: 0.03, y: 0.05},
+		axisOrigin: {x: 0.06, y: 0.07},
 		origin: 	{x: 0.1480, y: 0.0},
-		limit: 		{x: 0.8600, y: 0.95}
+		limit: 		{x: 0.90, y: 0.95}
 	});
 	
 	$(window).resize(function() {
@@ -344,60 +480,24 @@ $(window).load(function() {
 		validate();
 	});
 	
-	
-	/** Substitute for hash control
-	$("#SignUpConfirmation .nextStepLinkContainer a").click(function() {
-		$("#SignUpConfirmation").fadeOut('slow', function() {
-			$("#Title").fadeIn('slow');
-		});
-	});
-
-	$("#Title a.nextStepLink").click(function() {
-		$("#Title").fadeOut('slow', function() {
-			$("#Introduction").fadeIn('slow');
-		});
+	$(":not(#Alert)").click(function() {
+		$("#AlertOverlay").fadeOut('slow');
 	});
 	
-	$("#Introduction a.nextStepLink").click(function() {
-		$("#Introduction").fadeOut('slow', function() {
-			$("#Step1").fadeIn('slow');
-		
-		});
+	$("#ProcessLogin_btn").click(function() {
+		caller = 'login_btn';
 	});
 	
-	$("#Step1 a.nextStepLink").click(function() {
-		$("#Step1").fadeOut('slow', function() {
-			$("#Result").fadeIn('slow');
-			graph.initialize();
-			//graph.redraw();
-			graph.drawFunction({
-				f: function(x) {
-					var a = parseFloat(document.getElementById("frm_bp_sys").value);
-					var b = parseFloat(document.getElementById("frm_tc_hdl").value);
-					//Debug: console.log('a', a, 'b', b);
-					return a*x/2000+b*x*x/1700 + 2;
-				},
-				//f: function(x) {return x;},
-				//f: function(x) {return 120*x/2000+4.5*x*x/1700 + 2;},
-				color: '#FF8B3F',
-				from: parseInt( document.getElementById("frm_age").value),
-				to: 90
-			}, true);
-		});
+	$("#btn_ShowResult").click(function() {
+		caller = 'step1';
 	});
-	
-	$("#signup_link").click(function() {
-		$("#Title").fadeOut('slow', function() {
-			$("#SignUp").fadeIn();
-		});
-	});
-	
-	**/
 	
 	/**
 	 * The submit handler
 	 */
-	$("#SignUp .nextStepLinkContainer a").click(function() {
+	$("#SignUp .nextStepLinkContainer a#SignUpSubmit").click(function() {
+		caller = 'signupsubmit';
+		$("#AlertOverlay").fadeOut('slow');
 		/**
 		 * TODO Form validation before submitting it to action.php
 		 * TODO Add encryption to password before posting it to action.php
@@ -419,6 +519,8 @@ $(window).load(function() {
 				$("#SignUp").fadeOut('slow', function() {
 					$("#SignUpConfirmation").fadeIn('slow');
 				});
+			} else {
+				Alert("An error occurred while trying to create your account.<br>Pleasecheck if all your data are correctly input.");
 			}
 		});
 	});
@@ -428,12 +530,22 @@ $(window).load(function() {
 	graph.redraw();
 	/** end **/
 	
-	//$("#Result").hide();
+	$("#Result").hide().css("opacity", 1);
 	
-	/** Update the label accordingly to the slider **/
+	/** Update the labels accordingly to the sliders **/
 	$("#frm_tc_hdl").change(function() {
 		$("#frm_tc_hdl_val").html($("#frm_tc_hdl").val());
 	});
+	
+	$("#wif_bp").change(function() {
+		$("#wif_bp_val").html($("#wif_bp").val());
+	});
+	
+	$("#wif_tc_hdl").change(function() {
+		$("#wif_tc_hdl_val").html($("#wif_tc_hdl").val());
+	});
+	
+	
 	
 	//Debug: console.log(graph);
 });
