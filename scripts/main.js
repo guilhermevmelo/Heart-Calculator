@@ -145,6 +145,15 @@ function Graph(definitions) {
 		context.fillText("15%", (this.axisOrigin.x + 0.85)*this.w, 0.72*this.h);
 		context.fillText("Low", (this.axisOrigin.x + 0.02)*this.w, 0.87*this.h);
 		context.fillText("10%", (this.axisOrigin.x + 0.85)*this.w, 0.81*this.h);
+		
+		/* Axes labels */
+		context.save();
+		context.font = aux + 'px "Source Sans Pro", sans-serif';
+		context.translate(this.axisOrigin.x * this.w, (1-this.axisOrigin.y) * this.h);
+		context.fillText("Age", 0.022*this.h, 0.02*this.w);
+		context.rotate(-Math.PI/2);
+		context.fillText("Risk of heart desease", 0.015*this.h, -0.01*this.w);
+		context.restore();
 	};
 	
 	this.initialize();
@@ -183,6 +192,7 @@ function Graph(definitions) {
 		
 		for (var i = settings.from * this.xDotDist; i <= settings.to * this.xDotDist; i += this.xDotDist){
 			context.lineTo(i, settings.f(i / this.xDotDist) * this.yDotDist);
+			
 			//Debug: console.log(i, parseInt(i/this.xDotDist));
 			
 			/* Draws the coordinates when x is a multiple of 9
