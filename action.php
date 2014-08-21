@@ -6,6 +6,7 @@
 
 session_start();
 require_once 'classes/User.DAO.class.php';
+require_once 'classes/functions.php';
 
 $q = isset($_POST["q"])? $_POST["q"] : $_GET["q"];
 
@@ -86,23 +87,62 @@ if(isset($q) && $q == "confirm") {
  * Login
  */
 if (isset($q) && $q == 'login') {
+	header('Content-Type: application/json');
 	$email = $_POST["email"];
 	$password_hash = md5($_POST["password"]);
 	
 	$uDAO = new UserDAO();
 	if ($u = $uDAO->login($email, $password_hash)) {
 		if ($u->confirmed == 1) {
+			$auxDate = new DateTime();
+			$age = $auxDate->sub(getDateIntervalFromDate($u->birthday))->format('y');
+			
 			$_SESSION["access"] = "allow";
 			$_SESSION["id_user"] = $u->id_user;
+			$_SESSION["age"] = $age;
+			$_SESSION["gender"] = $u->gender;
+			$_SESSION["risk"] = $u->belong_risk_ethnic_group;
+			$_SESSION["name"] = $u->name;
 			
-			$auxDate = new DateTime();
-			$age = $auxDate->sub(new DateInterval($u->birthday->format("Y-m-d")));
+			$r = array('permission' => TRUE);
+			$r["data"] = array('gender'  => $u->gender, 
+							   'age' 	 => $age,
+							   'id_user' => $u->id_user,
+							   'risk'	 => $u->belong_risk_ethnic_group,
+							   'name' 	 => $u->name);
 			
-			echo "yes;;".$u->gender.";".$age;
+			
 		} else {
-			echo "not-confirmed";
+			$r = array('permission' => 'not-confirmed');
 		}
 	} else
-		echo "no";
+		$r = array('permission' => FALSE);
+	
+	echo json_encode($r);
+}
+
+/**
+ * Check Login
+ */
+ if (isset($q) && $q == 'checkLogin') {
+ 	header("Content-Type: application/json");	
+ 	if ($_SESSION["access"] == "allow") {
+ 		$r = array('permission' => TRUE);
+		$r["data"] = array('gender' => $_SESSION["gender"],
+						   'age'	=> $_SESSION["age"],
+						   'id_user'=> $_SESSION["id_user"],
+						   'risk'	=> $_SESSION["risk"],
+						   'name'	=> $_SESSION["name"]);
+ 	} else
+		$r = array('permission' => FALSE);
+	
+	echo json_encode($r);
+ }
+ 
+ /**
+  * Logout
+  */
+if (isset($q) && $q == "logout") {
+	$_SESSION["access"] = "deny";
 }
 ?>

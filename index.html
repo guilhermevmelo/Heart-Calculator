@@ -55,9 +55,9 @@
 					<h1>The <span class="redShadow">Heart</span> Calculator</h1>
 				
 					<p class="nextStepLinkContainer">
-						<a href="#/Login" class="button" title="Use your credentials to a custom prediction">I already have an account</a>
+						<a href="#/Login" class="button" id="loginLink" title="Use your credentials to a custom prediction">I already have an account</a>
 						<a href="#/SignUp" class="button" id="signup_link" title="Keep track of you heart health">Create an account</a>
-						<a href="#/Intro" class="nextStepLink button" title="Just use the application">Begin without registering</a>
+						<a href="#/Intro" class="nextStepLink button" id="beginLink" title="Just use the application">Begin without registering</a>
 					</p>
 				</section><!-- #Title-->
 				
@@ -65,15 +65,18 @@
 					<h2>Introduction</h2>
 					<p>Pellentesque et interdum ligula. Nulla congue nisl et metus varius consequat. Quisque ut elementum justo, ac adipiscing ligula. Duis at gravida ligula. Phasellus eros sem, scelerisque in justo eu, pellentesque tincidunt turpis. Nunc ut nunc ut diam suscipit dapibus. Nam vel aliquam augue. Fusce facilisis vulputate malesuada. Duis sodales faucibus enim, in egestas mauris facilisis et. Cras dictum, leo et feugiat blandit, arcu nulla rhoncus metus, ac faucibus erat augue ut erat. Sed interdum egestas ipsum, eu elementum metus hendrerit quis. Integer odio nibh, gravida at tempus vitae, rhoncus vitae lorem.</p>
 					<p class="nextStepLinkContainer">
-						<a href="#/Title" class="button">Last step</a>
+						<a href="#/Title" class="button">Previous step</a>
 						<a href="#/Step1" class="nextStepLink button">Collect your risk factors</a>
 					</p>
 				</section><!-- #Introduction -->
 				
 				<section id="Step1">
 					<h2>Step 1: Risk factors</h2>
+					
+					<p id="AlreadyKnow"></p>
+					
 					<form name="Step1_form">
-						<fieldset>
+						<fieldset id="frm_fld_gender">
 							<label>What's your gender?</label>
 							
 							<input type="radio" name="frm_gender" id="frm_gender_m" value="male">
@@ -83,13 +86,13 @@
 							<label for="frm_gender_f">Female</label>
 						</fieldset>
 						
-						<fieldset>
+						<fieldset id="frm_fld_age">
 							<label for="frm_age">How old are you?</label>
 							<input type="number" min="18" max="99" value="18" size="2" name="frm_age" id="frm_age">
 							years
 						</fieldset>
 						
-						<fieldset>
+						<fieldset id="frm_fld_risk">
 							<label>Do you belong to any high risk ethnic group?</label>
 							
 							<input type="radio" name="frm_risk" id="frm_risk_y" value="Yes">
@@ -140,7 +143,7 @@
 						</fieldset>
 					</form>
 					<p class="nextStepLinkContainer">
-						<a href="#/Intro" class="button">Last step</a>
+						<a href="#/Intro" class="button">Previous step</a>
 						<a href="#/Result" class="nextStepLink button" id="btn_ShowResult" style="display:none;">Calculate</a>
 					</p>
 				
@@ -169,13 +172,13 @@
 								</fieldset>
 								
 								<fieldset id="fld_tc_hdl">
-									<label for="wif_tc_hdl">...your TC/HDL ratio change?</label>
+									<label for="wif_tc_hdl">...your cholestrol ratio changes?</label>
 									<input type="range" min="4" max="8" value="4.5" step="0.1" name="wif_tc_hdl" id="wif_tc_hdl">
 									<span id="wif_tc_hdl_val">4.5</span>
 								</fieldset>
 								
 								<fieldset id="fld_bp">
-									<label for="wif_bp">...your blood pressure change?</label>
+									<label for="wif_bp">...your blood pressure changes?</label>
 									<input type="range" min="70" max="190" value="120" step="10" name="wif_bp" id="wif_bp">
 									<span id="wif_bp_val">120</span>
 								</fieldset>
@@ -186,7 +189,8 @@
 					<canvas id="ResultCanvas" width="800">Your browser does not support canvas drawing yet.</canvas>
 					
 					<p class="nextStepLinkContainer">
-						<a href="#/Step1" class="button">Last step</a>
+						<a href="#/Step1" class="button">Previous step</a>
+						<a href="#/Result" class="button saveToHistory" id="saveLink" title="Add this date to your history">Save to history</a>
 					</p>
 				</section><!-- #Result -->
 				

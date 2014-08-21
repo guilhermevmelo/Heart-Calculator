@@ -4,15 +4,53 @@
  * Date:	29/06/2014
  */
 
+var graph  = null;
+var caller = null;
+var user   = null;
+
+$.ajax({
+	url: 'action.php',
+	type: 'GET',
+	data: {
+		'q': 'checkLogin'
+	}
+}).done(function(ans) {
+	if(ans.permission === true) {
+		user = ans;
+		parseHash();
+	}
+});
+
 window.onhashchange = parseHash;
 window.onload = parseHash;
 
-var graph = null;
-var caller = null;
+/**
+ * Function definitions
+ */
 
 function Alert(msg) {
 	$("#Alert p").html(msg);
 	$("#AlertOverlay").fadeIn('slow');
+}
+
+function valid_date(date) {
+	var date_pattern = new RegExp(/^\d{2}(-|\/)\d{2}(-|\/)\d{4}$/);
+	if (date_pattern.test(date)) {
+		date_pattern = new RegExp(/-/);
+		var separator = '/';
+		if(date_pattern.test(date))
+			separator = '-';
+			
+		var date_parts = date.split(separator);
+		var formated_date = date_parts[2] + "-" + date_parts[1] + "-" + date_parts[0];
+		return formated_date;
+	}
+	
+	date_pattern = new RegExp(/^\d{4}-\d{2}-\d{2}$/);
+	if(date_pattern.test(date))
+		return date;
+	
+	return false;
 }
 
 function rads(x) { return Math.PI * x / 180; }
@@ -50,8 +88,7 @@ function Graph(definitions) {
 		this.h = parseInt(this.w * this.ratioHW);
 		this.canvas.style.height = this.h + "px";
 		
-		//Debug:
-		console.log("this.w:", this.w, "this.h:", this.h);
+		//Debug: console.log("this.w:", this.w, "this.h:", this.h);
 		
 		this.canvas.width = this.w;
 		this.canvas.height = this.h;
@@ -148,6 +185,7 @@ function Graph(definitions) {
 		
 		/* Axes labels */
 		context.save();
+		aux *= 0.85;
 		context.font = aux + 'px "Source Sans Pro", sans-serif';
 		context.translate(this.axisOrigin.x * this.w, (1-this.axisOrigin.y) * this.h);
 		context.fillText("Age", 0.022*this.h, 0.02*this.w);
@@ -179,7 +217,7 @@ function Graph(definitions) {
 		context.scale(1, -1);
 		context.beginPath();
 		context.rect(0, 1, this.drawable.w, this.drawable.h-1);
-		console.log("clip:", this.drawable.w, this.drawable.h-1);
+		//Debug: console.log("clip:", this.drawable.w, this.drawable.h-1);
 		context.clip();
 		
 		context.beginPath();
@@ -188,7 +226,7 @@ function Graph(definitions) {
 		context.shadowOffsetX = 1;
 		context.shadowOffsetY = 2;
 		context.shadowColor	  = "#c4c4c4";
-		context.shadowBlur = 2;
+		context.shadowBlur 	  = 2;
 		
 		for (var i = settings.from * this.xDotDist; i <= settings.to * this.xDotDist; i += this.xDotDist){
 			context.lineTo(i, settings.f(i / this.xDotDist) * this.yDotDist);
@@ -255,7 +293,7 @@ function parseHash() {
 	var hash = location.hash;
 	var pattern = new RegExp(/^#\/Confirm\//);
 	
-	console.log(pattern.test(hash));
+	//Debug: console.log(pattern.test(hash));
 	
 	if (pattern.test(hash))
 		hash = "#/Confirm";
@@ -293,7 +331,15 @@ function parseHash() {
 					password: $("#lgn_password").val()
 				}
 			}).done(function(ans) {
-				Alert(ans);
+				if (ans.permission === true) {
+					user = ans;
+					location.hash = '#/Title';
+					Alert('Hello, ' + user.data.name + '.');
+				} else if (ans.permission == "not_confirmed") {
+					Alert('Your account is not confirmed.<br>Please check your email for a confirmation email to enable login.');
+				} else {
+					Alert('Please check your login credentials.');
+				}
 			});
 			
 			break;
@@ -325,9 +371,35 @@ function parseHash() {
 		case "#/Step1":
 			//Debug: console.log("Step 1");
 			if ($(".currentStep").length == 0) {
+				if(user != null) {
+						$('#frm_gender_'+user.data.gender).attr('checked', 'checked');
+						$('#frm_age').val(user.data.age);
+						$('#frm_risk_'+(user.data.risk?'y':'n')).attr('checked', 'checked');
+						
+						$('#frm_fld_gender').hide();
+						$('#frm_fld_age').hide();
+						$('#frm_fld_risk').hide();
+						
+						$('#AlreadyKnow').html("We already know you are a " + user.data.age + ' years old ' + (user.data.gender == 'f'? 'woman' : 'man') + " who "+ (user.data.risk? "belongs" : "does not belong") + " to a high risk ethnic group.");
+						$('#AlreadyKnow').show();
+					}
 				$("#Step1").fadeIn('slow').addClass("currentStep");
 			} else if (!$("#Step1").hasClass("currentStep")) {
 				$(".currentStep").fadeOut('slow', function() {
+					
+					if(user != null) {
+						$('#frm_gender_'+user.data.gender).attr('checked', 'checked');
+						$('#frm_age').val(user.data.age);
+						$('#frm_risk_'+(user.data.risk?'y':'n')).attr('checked', 'checked');
+						
+						$('#frm_fld_gender').hide();
+						$('#frm_fld_age').hide();
+						$('#frm_fld_risk').hide();
+						
+						$('#AlreadyKnow').html("We already know you are a " + user.data.age + ' years old ' + (user.data.gender == 'f'? 'woman' : 'man') + " who "+ (user.data.risk? "belongs" : "does not belong") + " to a high risk ethnic group.");
+						$('#AlreadyKnow').show();
+					}
+					
 					$(".currentStep").removeClass("currentStep");
 					$("#Step1").fadeIn('slow').addClass("currentStep");
 				});
@@ -337,6 +409,8 @@ function parseHash() {
 		case "#/Result":
 			if (caller != 'step1')
 				location.hash = '#/Title';
+				
+			$("#Result").css("opacity", 1);
 			/**
 			 * TODO Validate to only show the result if the Step 1 has been completed
 			 * TODO Add this new state to the user profile, if logged in
@@ -368,11 +442,34 @@ function parseHash() {
 						
 						$("#wif_bp").val($("#frm_bp_sys").val());
 						$("#wif_bp_val").html($("#wif_bp").val());
-						$("#fld_bp").delay(300*delay).fadeIn('fast');
+						$("#fld_bp").delay(300*delay++).fadeIn('fast');
+						
+						if(user != null)
+							$("#saveLink").show();
 						
 						$("#Result .nextStepLinkContainer a").click(function() {
 							$("#WhatIf fieldset").hide();
 						});
+						
+						$("#saveLink").click(function() {
+							$("#saveLink").addClass("disabled").removeAttr("href").fadeOut('fast');
+							
+							$.ajax({
+								url: 'action.php',
+								type: 'POST',
+								data: {
+									'q': 'saveState',
+									'tc_hdl': $('#frm_tc_hdl').val(),
+									'smoker': $('[name="frm_smoke"]:checked').val(),
+									'has_diabetes': $('[name="frm_diabetes"]:checked').val(),
+									'pressure_sys': $('#frm_bp_sys').val(),
+									'pressure_dia': $('#frm_bp_dia').val()
+								}
+							}).done(function(ans) {
+								Alert("The current state was added to your history and will be shown when you do another prediction.");
+							});
+						});
+						
 						/**
 						 * Dynamically change prediction
 						 */
@@ -383,8 +480,18 @@ function parseHash() {
 								f: function(x) {
 									var a = parseFloat($("#wif_bp").val());
 									var b = parseFloat($("#wif_tc_hdl").val());
+									var c = 1;
+									if ($("#wif_startSmoke").is(":checked"))
+										c *= 1.7;
+										
+									if ($("#wif_stopSmoke").is(":checked"))
+										c *= 0.58;
+										
+									if ($("#wif_diabetes").is(":checked"))
+										c *= 1.5;
+									
 									//Debug: console.log('a', a, 'b', b);
-									return a*x/2000+b*x*x/1700 + 2;
+									return c * (a*x/2000+b*x*x/1700 + 2);
 								},
 								color: '#E2389B',
 								from: parseInt( document.getElementById("frm_age").value),
@@ -399,12 +506,41 @@ function parseHash() {
 					graph.initialize();
 					//graph.redraw();
 					
+					/**
+					 * TODO Draw History
+					 */
+					
+					
+					/**
+					 * Draw ideal curve
+					 */
+					graph.drawFunction({
+						f: function(x) {
+							return 1 * (120*x/2000+4*x*x/1700 + 2);
+						},
+						color: '#36b0d9',
+						from: parseInt( document.getElementById("frm_age").value),
+						to: 90,
+						drawToday: false
+					}, true);
+					
+					/**
+					 * Draw prediction
+					 */
 					graph.drawFunction({
 						f: function(x) {
 							var a = parseFloat(document.getElementById("frm_bp_sys").value);
 							var b = parseFloat(document.getElementById("frm_tc_hdl").value);
+							var c = 1;
+							
+							if ($("#frm_smoke_y").is(":checked"))
+								c *= 1.7;
+								
+							if ($("#frm_diabetes_y").is(":checked"))
+								c *= 1.5;
+								
 							//Debug: console.log('a', a, 'b', b);
-							return a*x/2000+b*x*x/1700 + 2;
+							return c * (a*x/2000+b*x*x/1700 + 2);
 						},
 						//f: function(x) {return x;},
 						//f: function(x) {return 120*x/2000+4.5*x*x/1700 + 2;},
@@ -419,6 +555,17 @@ function parseHash() {
 		
 		case "#/Title":
 			//Debug: console.log("Title");
+			
+			if (user != null) {
+				$("#beginLink").html('Begin');
+				$("#signup_link").hide();
+				$("#loginLink").hide();
+			} else {
+				$("#beginLink").html('Begin without registering');
+				$("#signup_link").show();
+				$("#loginLink").show();
+			}
+			
 			if ($(".currentStep").length == 0) {
 				$("#Title").fadeIn('slow').addClass("currentStep");
 			} else if (!$("#Title").hasClass("currentStep")) {
@@ -439,6 +586,20 @@ function parseHash() {
 					$("#Profile").fadeIn('slow').addClass("currentStep");
 				});
 			}
+			break;
+			
+		case "#/Logout":
+			user = null;
+			$.ajax({
+				url: "action.php",
+				type: "GET",
+				date: {
+					'q': 'logout'
+				}
+			}).done(function(ans) {
+				Alert("Successfully logged out.");
+				location.hash = "#/Title";
+			});
 			break;
 		
 		case "#/Confirm":
@@ -520,14 +681,14 @@ $(window).load(function() {
 				name: $("#snp_name").val(),
 				email: $("#snp_email").val(),
 				password: $("#snp_password").val(),
-				birthday: $("#snp_birthday").val(),
+				birthday: valid_date($("#snp_birthday").val()),
 				gender: $(".gender:checked").val(),
 				risk: $(".risk:checked").val()
 			}
 		}).done(function(r) {
 			if (r == "ok") {
 				$("#SignUp").fadeOut('slow', function() {
-					$("#SignUpConfirmation").fadeIn('slow');
+					$("#SignUpConfirmation").fadeIn('slow').addClass("currentStep");
 				});
 			} else {
 				Alert("An error occurred while trying to create your account.<br>Pleasecheck if all your data are correctly input.");

@@ -14,15 +14,14 @@ class UserDAO {
 	}
 	
 	function create(User $u) {
-		$sql = sprintf("insert into user values (null, '%s', '%s', '%s', '%s', %d, %d, '%s', %d)",
+		$sql = sprintf("insert into user values (null, '%s', '%s', '%s', '%s', %d, %d, '%s', 0)",
 				$u->name,
 				$u->email, 
 				$u->password,
 				$u->birthday->format("Y-m-d"),
 				$u->gender == 'f' ? 0 : 1,
 				$u->belong_risk_ethnic_group ? 1 : 0,
-				$u->uid,
-				0);
+				$u->uid);
 		$this->connection->query($sql);
 	}
 	
@@ -38,7 +37,7 @@ class UserDAO {
 			$u->email 			= $row["email"];
 			$u->password_hash 	= $row["password"];
 			$u->birthday 		= new DateTime($row["birthday"]);
-			$u->gender  		= ($row["gender"] == 1) ? 'f' : 'm';
+			$u->gender  		= ($row["gender"] == 1) ? 'm' : 'f';
 			$u->belong_risk_ethnic_group  = ($row["risk_ethnic_group"] == 1) ? TRUE : FALSE;
 			$u->uid  			= $row["uid"];
 			$u->confirmed 		= ($row["confirmed"] == 1) ? TRUE : FALSE;
@@ -59,7 +58,7 @@ class UserDAO {
 			$u->email 			= $row["email"];
 			$u->password_hash 	= $row["password"];
 			$u->birthday 		= new DateTime($row["birthday"]);
-			$u->gender  		= ($row["gender"] == 1) ? 'f' : 'm';
+			$u->gender  		= ($row["gender"] == 1) ? 'm' : 'f';
 			$u->belong_risk_ethnic_group  = ($row["risk_ethnic_group"] == 1) ? TRUE : FALSE;
 			$u->uid  			= $uid;
 			$u->confirmed 		= ($row["confirmed"] == 1) ? TRUE : FALSE;
