@@ -6,7 +6,7 @@
 require_once 'User.class.php';
 
 class UserState {
-	private $user 			= NULL; // reference to the user whose state this is
+	private $id_user 		= NULL;
 	private $date 			= NULL; // a DateTime object
 	private $tc_hdl 		= 4.5;
 	private $smoker 		= FALSE;

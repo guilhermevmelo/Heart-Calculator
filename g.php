@@ -1,5 +1,7 @@
 <?php
-$d = new DateTime();
+require_once 'classes/UserState.DAO.class.php';
+$usDAO = new UserStateDAO();
 
-print_r($d);
+echo json_encode($usDAO->readAllFromUser(1));
+
 ?>

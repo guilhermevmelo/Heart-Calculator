@@ -6,6 +6,7 @@
 
 session_start();
 require_once 'classes/User.DAO.class.php';
+require_once 'classes/UserState.DAO.class.php';
 require_once 'classes/functions.php';
 
 $q = isset($_POST["q"])? $_POST["q"] : $_GET["q"];
@@ -144,5 +145,31 @@ if (isset($q) && $q == 'login') {
   */
 if (isset($q) && $q == "logout") {
 	$_SESSION["access"] = "deny";
+}
+
+/**
+ * Save the new state
+ */
+if (isset($q) && $q == "saveState") {
+	$usDAO = new UserStateDAO();
+	$us = new UserState();
+	$us->id_user = $_SESSION["id_user"];
+	$us->date = new DateTime();
+	$us->tc_hdl = $_POST['tc_hdl'];
+	$us->smoker = $_POST['smoker'] == 'Yes' ? TRUE : FALSE;
+	$us->has_diabetes = $_POST['has_diabetes'] == 'Yes' ? TRUE : FALSE;
+	$us->pressure_sys = $_POST['pressure_sys'];
+	$us->pressure_dia = $_POST['pressure_dia'];
+	$us->current = TRUE;
+	$usDAO->create($us);
+}
+
+/**
+ * Get the state history
+ */
+if (isset($q) && $q == 'getHistory') {
+	header("Content-Type: application/json");
+	$usDAO = new UserStateDAO();
+	echo json_encode($usDAO->readAllFromUser(intval($_GET["id_user"])));
 }
 ?>

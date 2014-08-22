@@ -5,6 +5,8 @@
 
 require_once 'Connection.class.php';
 require_once 'UserState.class.php';
+require_once 'User.DAO.class.php';
+require_once 'functions.php';
 
 class UserStateDAO {
 	private $connection = NULL;
@@ -14,7 +16,8 @@ class UserStateDAO {
 	}
 	
 	function create(UserState $u) {
-		$sql = sprintf("insert into user_state values (null, '%s', %f, %d, %d, %d, %d, TRUE)",
+		$sql = sprintf("insert into user_state values (%d, '%s', %f, %d, %d, %d, %d, TRUE)",
+				$u->id_user,
 				$u->date->format("Y-m-d H:i:s"),
 				$u->tc_hdl,
 				$u->smoker,
@@ -45,12 +48,14 @@ class UserStateDAO {
 	}
 	
 	function readAllFromUser($id_user) {
+		$uDAO = new UserDAO();
+		$u = $uDAO->read($id_user);	
 		$sql = sprintf("select * from user_state where id_user = %d", $id_user);
 		$this->connection->query($sql);
 		if ($this->connection->num_rows() > 0) {
-			$r = new ArrayObject();
+			$r = array();
 			while ($row = $this->connection->fetch_array()) {
-				$us = new UserState();
+				/*$us = new UserState();
 				$us->id_user 	  = $row["id_user"];
 				$us->date 		  = new DateTime($row["date"]);
 				$us->tc_hdl 	  = $row["tc_hdl"];
@@ -58,8 +63,18 @@ class UserStateDAO {
 				$us->has_diabetes = $row["diabetes"];
 				$us->pressure_sys = $row["pressure_sys"];
 				$us->pressure_dia = $row["pressure_dia"];
-				$us->current 	  = ($row["current"] == 1) ? TRUE : FALSE;
-				$r->append($us);
+				$us->current 	  = ($row["current"] == 1) ? TRUE : FALSE;*/
+				$us = array();
+				$us["id_user"] 	  = $row["id_user"];
+				$us["date"] 	  = new DateTime($row["date"]);
+				$us["age"] 		  = $us["date"]->sub(getDateIntervalFromDate($u->birthday))->format('y');
+				$us["tc_hdl"] 	  = $row["tc_hdl"];
+				$us["smoker"] 	  = $row["smoker"];
+				$us["has_diabetes"] = $row["diabetes"];
+				$us["pressure_sys"] = $row["pressure_sys"];
+				$us["pressure_dia"] = $row["pressure_dia"];
+				$us["current"] 	  = ($row["current"] == 1) ? TRUE : FALSE;
+				$r[] = $us ;
 			}
 			
 			return $r;

@@ -174,14 +174,14 @@ function Graph(definitions) {
 		var aux = 0.0337 * this.h;
 		context.font = aux + 'px "Shadows Into Light", sans-serif';
 		context.fillStyle = "#000";
-		context.fillText("Very\nHigh", (this.axisOrigin.x + 0.02)*this.w, 0.35*this.h);
+		context.fillText("Very\nHigh", (this.axisOrigin.x + 0.02)*this.w, 0.32*this.h);
 		context.fillText("50%", (this.axisOrigin.x + 0.845)*this.w, 0.09*this.h);
-		context.fillText("High", (this.axisOrigin.x + 0.02)*this.w, 0.65*this.h);
-		context.fillText("20%", (this.axisOrigin.x + 0.845)*this.w, 0.63*this.h);
-		context.fillText("Medium", (this.axisOrigin.x + 0.02)*this.w, 0.74*this.h);
-		context.fillText("15%", (this.axisOrigin.x + 0.85)*this.w, 0.72*this.h);
-		context.fillText("Low", (this.axisOrigin.x + 0.02)*this.w, 0.87*this.h);
-		context.fillText("10%", (this.axisOrigin.x + 0.85)*this.w, 0.81*this.h);
+		context.fillText("High", (this.axisOrigin.x + 0.02)*this.w, 0.57*this.h);
+		context.fillText("20%", (this.axisOrigin.x + 0.845)*this.w, 0.56*this.h);
+		context.fillText("Medium", (this.axisOrigin.x + 0.02)*this.w, 0.66*this.h);
+		context.fillText("15%", (this.axisOrigin.x + 0.85)*this.w, 0.64*this.h);
+		context.fillText("Low", (this.axisOrigin.x + 0.02)*this.w, 0.78*this.h);
+		context.fillText("10%", (this.axisOrigin.x + 0.85)*this.w, 0.73*this.h);
 		
 		/* Axes labels */
 		context.save();
@@ -191,6 +191,84 @@ function Graph(definitions) {
 		context.fillText("Age", 0.022*this.h, 0.02*this.w);
 		context.rotate(-Math.PI/2);
 		context.fillText("Risk of heart desease", 0.015*this.h, -0.01*this.w);
+		context.restore();
+		
+		/* Captions */
+		context.save();
+		context.beginPath();
+		context.lineJoin = 'round';
+		
+		context.shadowOffsetX = 1;
+		context.shadowOffsetY = 2;
+		context.shadowColor	  = "#c4c4c4";
+		context.shadowBlur 	  = 2;
+		context.lineWidth = 2;
+		
+		/* prediction line */
+		context.moveTo(0.04*this.w, 0.92*this.h);
+		context.lineTo(0.08*this.w, 0.92*this.h);
+		context.strokeStyle = "#ff8c3f";
+		context.stroke();
+		context.closePath();
+		
+		context.fillText("Your estimated risk", 0.083*this.w, 0.93*this.h);
+		
+		/* ideal line */
+		context.beginPath();
+		context.moveTo(0.04*this.w, 0.96*this.h);
+		context.lineTo(0.08*this.w, 0.96*this.h);
+		context.strokeStyle = "#36b0d9";
+		context.stroke();
+		context.closePath();
+		
+		context.fillText("The ideal risk to your profile", 0.083*this.w, 0.97*this.h);
+		
+		/* simulation line */
+		context.beginPath();
+		context.moveTo(0.4*this.w, 0.92*this.h);
+		context.lineTo(0.44*this.w, 0.92*this.h);
+		context.strokeStyle = "#E2389B";
+		context.stroke();
+		
+		context.fillText("Your simulated risk", 0.45*this.w, 0.93*this.h);
+		
+		/* Dots */
+		context.beginPath();
+		context.arc(0.42 * this.w,
+					0.96 * this.h,
+					5,
+					0,
+					rads(360),
+					false);
+		context.fillStyle = "#ff8c3f";
+		context.lineWidth = 4;
+		context.strokeStyle = '#fff';
+		context.shadowOffsetX = 0;
+		context.shadowOffsetY = 0;
+		context.stroke();
+		context.fill();
+		
+		context.fillStyle = "#000";
+		context.fillText("Your risk today", 0.45*this.w, 0.97*this.h);
+		
+		context.beginPath();
+		context.arc(0.72 * this.w,
+					0.96 * this.h,
+					5,
+					0,
+					rads(360),
+					false);
+		context.fillStyle = "#bfec3b";
+		context.lineWidth = 4;
+		context.strokeStyle = '#fff';
+		context.shadowOffsetX = 0;
+		context.shadowOffsetY = 0;
+		context.stroke();
+		context.fill();
+		
+		context.fillStyle = "#000";
+		context.fillText("Your history", 0.73*this.w, 0.97*this.h);
+		
 		context.restore();
 	};
 	
@@ -507,9 +585,34 @@ function parseHash() {
 					//graph.redraw();
 					
 					/**
-					 * TODO Draw History
+					 * Draw History
 					 */
-					
+					$.ajax({
+						url: 'action.php',
+						type: 'GET',
+						data: {
+							'q': 'getHistory',
+							'id_user': user.data.id_user
+						}
+					}).done(function(ans) {
+						for (i = 0; i < ans.length; i++) {
+							console.log(ans[i]);
+							graph.drawFunction({
+								f: function(x) {
+									var c = 1;
+									if (parseInt(ans[i].smoker) == 1)
+										c *= 1.7;
+									if (parseInt(ans[i].diabetes) == 1)
+										c *= 1.5;
+									return c * (parseFloat(ans[i].pressure_sys)*x/2000+parseFloat(ans[i].tc_hdl)*x*x/1700 + 2);
+								},
+								color: '#bfec3b',
+								from: parseInt(ans[i].age),
+								to: parseInt(ans[i].age),
+								drawToday: true
+							}, true);
+						}
+					});
 					
 					/**
 					 * Draw ideal curve
@@ -637,7 +740,7 @@ $(window).load(function() {
 		canvasId: 	"ResultCanvas",
 		ratioWH: 	1.5,
 		resolution: {x: 90, y: 90},
-		axisOrigin: {x: 0.06, y: 0.07},
+		axisOrigin: {x: 0.06, y: 0.15},
 		origin: 	{x: 0.1480, y: 0.0},
 		limit: 		{x: 0.90, y: 0.95}
 	});
