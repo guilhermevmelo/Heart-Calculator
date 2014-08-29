@@ -18,6 +18,7 @@ $.ajax({
 	if(ans.permission === true) {
 		user = ans;
 		parseHash();
+		console.log("Processingajax request",user);
 	}
 });
 
@@ -368,6 +369,7 @@ function validate() {
  * Hash control
  */
 function parseHash() {
+	
 	var hash = location.hash;
 	var pattern = new RegExp(/^#\/Confirm\//);
 	
@@ -390,11 +392,7 @@ function parseHash() {
 			break;
 			
 		case "#/ProcessLogin":
-			location.hash = '#/Title';
-			if (caller != 'login_btn') {
-				
-				break;
-			}
+			if (caller != 'login_btn') break;
 			
 			/*$("#LoginOverlay").fadeOut('slow', function() {
 				$("#Title").fadeIn('slow');
@@ -411,15 +409,16 @@ function parseHash() {
 			}).done(function(ans) {
 				if (ans.permission === true) {
 					user = ans;
-					location.hash = '#/Title';
+					//location.hash = '#/Title';
 					Alert('Hello, ' + user.data.name + '.');
 				} else if (ans.permission == "not_confirmed") {
 					Alert('Your account is not confirmed.<br>Please check your email for a confirmation email to enable login.');
 				} else {
 					Alert('Please check your login credentials.');
 				}
+
+				location.hash = '#/Title';
 			});
-			
 			break;
 		
 		case "#/SignUp":
@@ -450,17 +449,25 @@ function parseHash() {
 			//Debug: console.log("Step 1");
 			if ($(".currentStep").length == 0) {
 				if(user != null) {
-						$('#frm_gender_'+user.data.gender).attr('checked', 'checked');
-						$('#frm_age').val(user.data.age);
-						$('#frm_risk_'+(user.data.risk?'y':'n')).attr('checked', 'checked');
-						
-						$('#frm_fld_gender').hide();
-						$('#frm_fld_age').hide();
-						$('#frm_fld_risk').hide();
-						
-						$('#AlreadyKnow').html("We already know you are a " + user.data.age + ' years old ' + (user.data.gender == 'f'? 'woman' : 'man') + " who "+ (user.data.risk? "belongs" : "does not belong") + " to a high risk ethnic group.");
-						$('#AlreadyKnow').show();
-					}
+					$('#frm_gender_'+user.data.gender).attr('checked', 'checked');
+					$('#frm_age').val(user.data.age);
+					$('#frm_risk_'+(user.data.risk?'y':'n')).attr('checked', 'checked');
+					
+					$('#frm_fld_gender').hide();
+					$('#frm_fld_age').hide();
+					$('#frm_fld_risk').hide();
+					
+					$('#AlreadyKnow').html("We already know you are a " + user.data.age + ' years old ' + (user.data.gender == 'f'? 'woman' : 'man') + " who "+ (user.data.risk? "belongs" : "does not belong") + " to a high risk ethnic group.");
+					$('#AlreadyKnow').show();
+				} else {
+					for (var i = 0; i < document.forms.length; i++)
+						document.forms[i].reset();
+					
+					$('#frm_fld_gender').show();
+					$('#frm_fld_age').show();
+					$('#frm_fld_risk').show();
+					$('#AlreadyKnow').hide();
+				}
 				$("#Step1").fadeIn('slow').addClass("currentStep");
 			} else if (!$("#Step1").hasClass("currentStep")) {
 				$(".currentStep").fadeOut('slow', function() {
@@ -476,6 +483,14 @@ function parseHash() {
 						
 						$('#AlreadyKnow').html("We already know you are a " + user.data.age + ' years old ' + (user.data.gender == 'f'? 'woman' : 'man') + " who "+ (user.data.risk? "belongs" : "does not belong") + " to a high risk ethnic group.");
 						$('#AlreadyKnow').show();
+					} else {
+						for (var i = 0; i < document.forms.length; i++)
+							document.forms[i].reset();
+						
+						$('#frm_fld_gender').show();
+						$('#frm_fld_age').show();
+						$('#frm_fld_risk').show();
+						$('#AlreadyKnow').hide();
 					}
 					
 					$(".currentStep").removeClass("currentStep");
@@ -529,23 +544,20 @@ function parseHash() {
 							$("#WhatIf fieldset").hide();
 						});
 						
-						$("#saveLink").click(function() {
-							$("#saveLink").addClass("disabled").removeAttr("href").fadeOut('fast');
-							
-							$.ajax({
-								url: 'action.php',
-								type: 'POST',
-								data: {
-									'q': 'saveState',
-									'tc_hdl': $('#frm_tc_hdl').val(),
-									'smoker': $('[name="frm_smoke"]:checked').val(),
-									'has_diabetes': $('[name="frm_diabetes"]:checked').val(),
-									'pressure_sys': $('#frm_bp_sys').val(),
-									'pressure_dia': $('#frm_bp_dia').val()
-								}
-							}).done(function(ans) {
-								Alert("The current state was added to your history and will be shown when you do another prediction.");
-							});
+						/**
+						 * Add this state to the history
+						 */
+						$.ajax({
+							url: 'action.php',
+							type: 'POST',
+							data: {
+								'q': 'saveState',
+								'tc_hdl': $('#frm_tc_hdl').val(),
+								'smoker': $('[name="frm_smoke"]:checked').val(),
+								'has_diabetes': $('[name="frm_diabetes"]:checked').val(),
+								'pressure_sys': $('#frm_bp_sys').val(),
+								'pressure_dia': $('#frm_bp_dia').val()
+							}
 						});
 						
 						/**
@@ -565,7 +577,7 @@ function parseHash() {
 									if ($("#wif_stopSmoke").is(":checked"))
 										c *= 0.58;
 										
-									if ($("#wif_diabetes").is(":checked"))
+									if ($("#wif_diabetes").is(":checked")|| $("#frm_diabetes").is(":checked"))
 										c *= 1.5;
 									
 									//Debug: console.log('a', a, 'b', b);
@@ -595,20 +607,22 @@ function parseHash() {
 							'id_user': user.data.id_user
 						}
 					}).done(function(ans) {
-						for (i = 0; i < ans.length; i++) {
-							console.log(ans[i]);
+						//Debug: console.log(ans);
+						for (var i = 0; i < ans.length; i++) {
+							//Debug: console.log(ans[i]);
+							var state = ans[i];
 							graph.drawFunction({
 								f: function(x) {
 									var c = 1;
-									if (parseInt(ans[i].smoker) == 1)
+									if (parseInt(state.smoker) == 1)
 										c *= 1.7;
-									if (parseInt(ans[i].diabetes) == 1)
+									if (parseInt(state.diabetes) == 1)
 										c *= 1.5;
-									return c * (parseFloat(ans[i].pressure_sys)*x/2000+parseFloat(ans[i].tc_hdl)*x*x/1700 + 2);
+									return c * (parseFloat(state.pressure_sys)*x/2000+parseFloat(state.tc_hdl)*x*x/1700 + 2);
 								},
 								color: '#bfec3b',
-								from: parseInt(ans[i].age),
-								to: parseInt(ans[i].age),
+								from: parseInt(state.age),
+								to: parseInt(state.age),
 								drawToday: true
 							}, true);
 						}
@@ -696,12 +710,14 @@ function parseHash() {
 			$.ajax({
 				url: "action.php",
 				type: "GET",
-				date: {
+				data: {
 					'q': 'logout'
 				}
 			}).done(function(ans) {
 				Alert("Successfully logged out.");
+				user = null;
 				location.hash = "#/Title";
+				
 			});
 			break;
 		
@@ -731,8 +747,17 @@ function parseHash() {
 			console.log("Called default");
 			location.hash = "#/Title";
 			break;
-		
 	}
+	
+	/**
+	 * Display the header iff the user is logged
+	 */
+	if (user != null) {
+		$("header").fadeIn();
+	} else {
+		$("header").fadeOut();
+	}
+	
 }
 
 $(window).load(function() {

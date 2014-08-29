@@ -9,7 +9,7 @@ require_once 'classes/User.DAO.class.php';
 require_once 'classes/UserState.DAO.class.php';
 require_once 'classes/functions.php';
 
-$q = isset($_POST["q"])? $_POST["q"] : $_GET["q"];
+$q = isset($_POST["q"])? $_POST["q"] : (isset($_GET["q"])? $_GET["q"] : null);
 
 /**
  * Create a new user

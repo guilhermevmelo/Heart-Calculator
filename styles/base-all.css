@@ -19,7 +19,7 @@ body {
 	font-family: 'Source Sans Pro', sans-serif;
 	font-size: 16px;
 	background: url(../images/noise_background.png) repeat;
-
+	/*background-color: #EEEEEE;*/
 	text-shadow: 1px 1px 1px #C4C4C4;
 }
 
@@ -101,6 +101,7 @@ header {
 	left: 0;
 	top: 100px;
 	display: none;
+	z-index: 30;
 }
 
 #Login {
@@ -348,6 +349,7 @@ p.details {
 	text-align: center;
 }
 
+
 #Main nav ul li {
 	list-style-type: none;
 	display: inline-block;
@@ -357,6 +359,11 @@ p.details {
 
 header nav {
 	margin-right: 50px;
+}
+
+header nav ul li {
+	display: inline-block;
+	padding: 0 5px;
 }
 
 /** Specific Styles **/
