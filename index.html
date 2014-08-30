@@ -9,6 +9,7 @@
 		<link rel="stylesheet" href="styles/base-all.css" media="all">
 		
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
 		<script src="scripts/main.js"></script>
 	</head>
 	
@@ -23,7 +24,7 @@
 			<header>
 				<nav>
 					<ul>
-						<li>Hello <strong>Guilherme</strong>.</li>
+						<li>Hello <strong id="hdr_name"></strong>.</li>
 						<li><a href="#/Logout" title="Use the application without attaching your data to it">Logout</a></li>
 					</ul>
 				</nav>
@@ -31,6 +32,7 @@
 			<div id="Main">
 				<section id="LoginOverlay">
 					<div id="Login">
+						<h2 class="alignCenter">Login</h2>
 						<form id="Login_form">
 							<fieldset>
 								<label for="lgn_email">Email</label>
@@ -153,6 +155,8 @@
 				<section id="Result">
 					<h2>Result</h2>
 					
+					<canvas id="ResultCanvas" width="800">Your browser does not support canvas drawing yet.</canvas>
+					
 					<div id="WhatIf">
 						<div id="InnerWhatIf">
 							<h3>What if...</h3>
@@ -186,8 +190,6 @@
 							</form>
 						</div>
 					</div>
-					
-					<canvas id="ResultCanvas" width="800">Your browser does not support canvas drawing yet.</canvas>
 					
 					<p class="nextStepLinkContainer">
 						<a href="#/Step1" class="button">Previous step</a>

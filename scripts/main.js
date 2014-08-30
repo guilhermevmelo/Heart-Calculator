@@ -56,6 +56,10 @@ function valid_date(date) {
 
 function rads(x) { return Math.PI * x / 180; }
 
+function get_month_diff(date1, date2) {
+	return Math.abs(date1.getMonth() - date2.getMonth());
+}
+
 /**
  * 
  * @param definitions
@@ -84,7 +88,8 @@ function Graph(definitions) {
 	this.axisOrigin = definitions.axisOrigin;
 	
 	this.initialize = function() {
-		this.canvas.style.width = "70%";
+		this.canvas.style.width = (parseInt(window.getComputedStyle(document.body,null).width) <= 820) ? "100%" : "70%";
+		
 		this.w = parseInt(window.getComputedStyle(this.canvas, null).width);
 		this.h = parseInt(this.w * this.ratioHW);
 		this.canvas.style.height = this.h + "px";
@@ -375,6 +380,10 @@ function parseHash() {
 	
 	//Debug: console.log(pattern.test(hash));
 	
+	$('html, body').stop().animate({
+		scrollTop: 0
+	}, 1500,'easeInOutExpo');
+	
 	if (pattern.test(hash))
 		hash = "#/Confirm";
 	
@@ -412,7 +421,7 @@ function parseHash() {
 					//location.hash = '#/Title';
 					Alert('Hello, ' + user.data.name + '.');
 				} else if (ans.permission == "not_confirmed") {
-					Alert('Your account is not confirmed.<br>Please check your email for a confirmation email to enable login.');
+					Alert('Your account is not confirmed.<br>Please check your email for a confirmation to enable login.');
 				} else {
 					Alert('Please check your login credentials.');
 				}
@@ -599,34 +608,44 @@ function parseHash() {
 					/**
 					 * Draw History
 					 */
-					$.ajax({
-						url: 'action.php',
-						type: 'GET',
-						data: {
-							'q': 'getHistory',
-							'id_user': user.data.id_user
-						}
-					}).done(function(ans) {
-						//Debug: console.log(ans);
-						for (var i = 0; i < ans.length; i++) {
-							//Debug: console.log(ans[i]);
-							var state = ans[i];
-							graph.drawFunction({
-								f: function(x) {
-									var c = 1;
-									if (parseInt(state.smoker) == 1)
-										c *= 1.7;
-									if (parseInt(state.diabetes) == 1)
-										c *= 1.5;
-									return c * (parseFloat(state.pressure_sys)*x/2000+parseFloat(state.tc_hdl)*x*x/1700 + 2);
-								},
-								color: '#bfec3b',
-								from: parseInt(state.age),
-								to: parseInt(state.age),
-								drawToday: true
-							}, true);
-						}
-					});
+					if (user != null) {
+						$.ajax({
+							url: 'action.php',
+							type: 'GET',
+							data: {
+								'q': 'getHistory',
+								'id_user': user.data.id_user
+							}
+						}).done(function(ans) {
+							//Debug: console.log(ans);
+							var last = null;
+							var i = 0;
+							do {
+								var state = ans[i];
+								if (last == null || (last != null && get_month_diff(new Date(last.date), new Date(state.date)) >=2 )) {
+									var date = new Date(state.date);
+									console.log(state, date);
+									graph.drawFunction({
+										f: function(x) {
+											var c = 1;
+											if (parseInt(state.smoker) == 1)
+												c *= 1.7;
+											if (parseInt(state.diabetes) == 1)
+												c *= 1.5;
+											return c * (parseFloat(state.pressure_sys)*x/2000+parseFloat(state.tc_hdl)*x*x/1700 + 2);
+										},
+										color: '#bfec3b',
+										from: parseInt(state.age),
+										to: parseInt(state.age),
+										drawToday: true
+									}, true);
+									
+									last = state;
+								}
+							} while (i++ < ans.length - 1);
+						});
+					}
+					
 					
 					/**
 					 * Draw ideal curve
@@ -753,6 +772,7 @@ function parseHash() {
 	 * Display the header iff the user is logged
 	 */
 	if (user != null) {
+		$("#hdr_name").html(user.data.name);
 		$("header").fadeIn();
 	} else {
 		$("header").fadeOut();
@@ -819,7 +839,7 @@ $(window).load(function() {
 					$("#SignUpConfirmation").fadeIn('slow').addClass("currentStep");
 				});
 			} else {
-				Alert("An error occurred while trying to create your account.<br>Pleasecheck if all your data are correctly input.");
+				Alert("An error occurred while trying to create your account.<br>Please check if all your data are correctly input.");
 			}
 		});
 	});

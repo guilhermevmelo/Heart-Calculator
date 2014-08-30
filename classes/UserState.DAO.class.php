@@ -50,7 +50,7 @@ class UserStateDAO {
 	function readAllFromUser($id_user) {
 		$uDAO = new UserDAO();
 		$u = $uDAO->read($id_user);	
-		$sql = sprintf("select * from user_state where id_user = %d", $id_user);
+		$sql = sprintf("select * from user_state where id_user = %d order by date desc", $id_user);
 		$this->connection->query($sql);
 		if ($this->connection->num_rows() > 0) {
 			$r = array();
@@ -66,8 +66,9 @@ class UserStateDAO {
 				$us->current 	  = ($row["current"] == 1) ? TRUE : FALSE;*/
 				$us = array();
 				$us["id_user"] 	  = $row["id_user"];
-				$us["date"] 	  = new DateTime($row["date"]);
-				$us["age"] 		  = $us["date"]->sub(getDateIntervalFromDate($u->birthday))->format('y');
+				$date 			  = new DateTime($row["date"]);
+				$us["date"] 	  = $date->format(DateTime::ISO8601);
+				$us["age"] 		  = $date->sub(getDateIntervalFromDate($u->birthday))->format('y');
 				$us["tc_hdl"] 	  = $row["tc_hdl"];
 				$us["smoker"] 	  = $row["smoker"];
 				$us["has_diabetes"] = $row["diabetes"];
