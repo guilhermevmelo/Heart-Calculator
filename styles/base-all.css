@@ -23,7 +23,7 @@ body {
 	text-shadow: 1px 1px 1px #C4C4C4;
 }
 
-::selection { color: white; background-color: black; text-shadow: none;}
+/*::selection { color: white; background-color: black; text-shadow: none;}*/
 
 a {
 	text-decoration: none;
@@ -314,6 +314,7 @@ p.details {
 	/*margin: 0 auto;*/
 	border: 2px solid #36B0D9;
 	box-shadow: 0 5px 15px #8CD2E9;
+	position: relative;
 }
 
 #WhatIf {

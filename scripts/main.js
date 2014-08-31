@@ -7,6 +7,7 @@
 var graph  = null;
 var caller = null;
 var user   = null;
+var hit_caller = null;
 
 $.ajax({
 	url: 'action.php',
@@ -124,6 +125,8 @@ function Graph(definitions) {
 	this.canvas = document.getElementById(definitions.canvasId);
 	this.context = this.canvas.getContext("2d");
 	this.drawnFunctions = new Array();
+	this.simulationFunction = null;
+	this.todayFunction = null;
 	
 	this.ratioWH = definitions.ratioWH;
 	this.ratioHW = 1.0 / this.ratioWH;
@@ -134,6 +137,9 @@ function Graph(definitions) {
 	this.drawable = {};
 	this.axisOrigin = definitions.axisOrigin;
 	
+	/**
+	 * 
+	 */
 	this.initialize = function() {
 		this.canvas.style.width = (parseInt(window.getComputedStyle(document.body,null).width) <= 820) ? "100%" : "70%";
 		
@@ -245,7 +251,8 @@ function Graph(definitions) {
 		var aux = 0.0337 * this.h;
 		context.font = aux + 'px "Shadows Into Light", sans-serif';
 		context.fillStyle = "#000";
-		context.fillText("Very\nHigh", (this.axisOrigin.x + 0.02)*this.w, 0.32*this.h);
+		context.fillText("Very", (this.axisOrigin.x + 0.02)*this.w, 0.30*this.h);
+		context.fillText("High", (this.axisOrigin.x + 0.022)*this.w, 0.34*this.h);
 		context.fillText("50%", (this.axisOrigin.x + 0.845)*this.w, 0.09*this.h);
 		context.fillText("High", (this.axisOrigin.x + 0.02)*this.w, 0.57*this.h);
 		context.fillText("20%", (this.axisOrigin.x + 0.845)*this.w, 0.56*this.h);
@@ -429,26 +436,60 @@ function Graph(definitions) {
 	};
 	
 	this.redraw = function() {
+		if (this.simulationFunction != null)
+			this.drawFunction(this.simulationFunction, false);
+		
 		for ( var i = 0; i < this.drawnFunctions.length ; i++) {
 			this.drawFunction(this.drawnFunctions[i], false);
 			//console.log("redrawing function ", this.drawnFunctions[i]);
 		}
+		
+		if (this.todayFunction != null)
+			this.drawFunction(this.todayFunction, false);
 	};
-
-	this.addHistoryEvent = function(state, func) {
+	
+	this.drawHistoryState = function(state) {
+		var context = this.context;
+		context.save();
+		context.beginPath();
+		var aux = 0.0337 * this.h;
+		aux *= 0.85;
+		context.font = aux + 'px "Source Sans Pro", sans-serif';
+		
+		context.fillStyle = 'rgba(203, 235, 245, 0.7)';
+		context.strokeStyle = '#fff';
+		context.lineJoin = 'round';
+		context.lineWidth = 2;
+		context.fillRect(0.18 * this.w, 0.09 * this.h, 0.27*this.w, 0.18*this.h);
+		
+		/*context.shadowOffsetX = 1;
+		context.shadowOffsetY = 2;
+		context.shadowColor	  = "#c4c4c4";
+		context.shadowBlur 	  = 2;*/
+		context.strokeRect(0.18 * this.w, 0.09 * this.h, 0.27*this.w, 0.18*this.h);
+		
+		context.fillStyle = "#000000";
+		var date = new Date(state.date);
+		context.fillText("State saved on "+date.toDateString(), 0.189 * this.w, 0.13 * this.h);
+		context.fillText("Age: " + state.age+"   BP: "+state.pressure_sys+"/"+state.pressure_dia+"   TC/HDL: "+state.tc_hdl, 0.189 * this.w, 0.17 * this.h);
+		context.fillText("You " + (state.has_diabetes == 0 ? "did not have": "had") + " diabetes" , 0.189 * this.w, 0.21 * this.h);
+		context.fillText("You were " + (state.smoker == 0 ? "not": "") + " a smoker" , 0.189 * this.w, 0.25 * this.h);
+	};
+	
+	this.addHistoryEvent = function(state) {
 		var x = this.xDotDist;
 		var y = this.yDotDist;
 		var oxw = (this.origin.x) * this.w;
 		var h = this.h;
 		var h_offset = this.axisOrigin.y;
-
+		
+		var drawHistoryState = this.drawHistoryState;
+		
 		this.canvas.addEventListener('mousemove', function (e) {
 			var mouse = getMousePos(this, e);
-			/*mouse.x /= x;
-			mouse.y /= y;*/
 			var center = {
 				x: Math.ceil(oxw + (parseInt(state.age) * x) + 2),
-				y: Math.ceil(h - (func(parseInt(state.age)) * y + h_offset * h)) + 2
+				y: Math.ceil(h - (state.func(parseInt(state.age)) * y + h_offset * h)) + 2
 			};
 			
 			/*console.log("Event called");
@@ -457,8 +498,22 @@ function Graph(definitions) {
 			console.log("mouse", mouse);
 			console.log("center", center);*/
 			
-			if (isInside(mouse, center, 5))
-				console.log("Hit", state);
+			if (isInside(mouse, center, 5)) {
+				//Debug: console.log("Hit");
+				graph.initialize();
+				graph.redraw();
+				graph.drawHistoryState(state);
+				 hit_caller = state;
+			} else{
+				if (hit_caller == null) {
+					graph.initialize();
+					graph.redraw();
+				} else if (hit_caller === state) {
+					hit_caller = null;
+				}
+					
+				
+			}
 			
 		}, false);
 	};
@@ -672,8 +727,7 @@ function parseHash() {
 						 */
 						$("#WhatIf input").change(function() {
 							graph.initialize();
-							
-							graph.drawFunction({
+							var predFunc = {
 								f: function(x) {
 									var a = parseFloat($("#wif_bp").val());
 									var b = parseFloat($("#wif_tc_hdl").val());
@@ -694,8 +748,8 @@ function parseHash() {
 								from: parseInt( document.getElementById("frm_age").value),
 								to: 90,
 								drawToday: false
-							}, false);
-							
+							};
+							graph.simulationFunction = predFunc;
 							graph.redraw();
 						});
 					}).addClass("currentStep");
@@ -706,6 +760,7 @@ function parseHash() {
 					/**
 					 * Draw History
 					 */
+					var ideal_begin = 0;
 					if (user != null) {
 						$.ajax({
 							url: 'action.php',
@@ -724,46 +779,65 @@ function parseHash() {
 								if (last == null || (last != null && get_month_diff(new Date(last.date), new Date(state.date)) >= 6 )) {
 									//var date = new Date(state.date);
 									//Debug: console.log(state, date);
-									var func = function(x) {
+									state.func = function(x) {
 										var c = 1;
-										if (parseInt(state.smoker) == 1)
+										
+										if (state.smoker == 1)
 											c *= 1.7;
-										if (parseInt(state.diabetes) == 1)
+										
+										if (state.has_diabetes == 1)
 											c *= 1.5;
+										
+										console.log(state.has_diabetes, 'c', c);
 										return c * (parseFloat(state.pressure_sys)*x/2000+parseFloat(state.tc_hdl)*x*x/1700 + 2);
 									};
 									graph.drawFunction({
-										f: func,
+										f: state.func,
 										color: '#bfec3b',
 										from: parseInt(state.age),
 										to: parseInt(state.age),
 										drawToday: true
 									}, true);
-									graph.addHistoryEvent(state, func);
+									graph.addHistoryEvent(state);
 									last = state;
 								}
 							} while (i++ < ans.length - 1);
+							ideal_begin = last!= null? parseInt(last.age) : 0;
+							/**
+							 * Draw ideal curve
+							 */
+							graph.drawFunction({
+								f: function(x) {
+									return 1 * (120*x/2000+4*x*x/1700 + 2);
+								},
+								color: '#36b0d9',
+								from: ((ideal_begin != 0) ? ideal_begin : parseInt(document.getElementById("frm_age").value)),
+								to: 90,
+								drawToday: false
+							}, true);
 						});
+						
+						
+					} else {
+						/**
+						 * Draw ideal curveif the user is not loggedin
+						 */
+						graph.drawFunction({
+							f: function(x) {
+								return 1 * (120*x/2000+4*x*x/1700 + 2);
+							},
+							color: '#36b0d9',
+							from: parseInt(document.getElementById("frm_age").value),
+							to: 90,
+							drawToday: false
+						}, true);
 					}
 					
 					
 					/**
-					 * Draw ideal curve
-					 */
-					graph.drawFunction({
-						f: function(x) {
-							return 1 * (120*x/2000+4*x*x/1700 + 2);
-						},
-						color: '#36b0d9',
-						from: parseInt( document.getElementById("frm_age").value),
-						to: 90,
-						drawToday: false
-					}, true);
-					
-					/**
 					 * Draw prediction
 					 */
-					graph.drawFunction({
+					var todayFunc = {
 						f: function(x) {
 							var a = parseFloat(document.getElementById("frm_bp_sys").value);
 							var b = parseFloat(document.getElementById("frm_tc_hdl").value);
@@ -784,7 +858,9 @@ function parseHash() {
 						from: parseInt( document.getElementById("frm_age").value),
 						to: 90,
 						drawToday: true
-					}, true);
+					};
+					graph.drawFunction(todayFunc, false);
+					graph.todayFunction = todayFunc;
 				});
 			}
 			break;
@@ -836,8 +912,8 @@ function parseHash() {
 				Alert("Successfully logged out.");
 				user = null;
 				location.hash = "#/Title";
-				
 			});
+			graph.drawnFunction = new Array();
 			break;
 		
 		case "#/Confirm":
