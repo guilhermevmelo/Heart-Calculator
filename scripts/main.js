@@ -18,7 +18,7 @@ $.ajax({
 	if(ans.permission === true) {
 		user = ans;
 		parseHash();
-		console.log("Processingajax request",user);
+		//Debug: console.log("Processing ajax request", user);
 	}
 });
 
@@ -54,13 +54,60 @@ function valid_date(date) {
 	return false;
 }
 
+/**
+ * Converts degrees into radians
+ * @param x
+ * @returns {Number}
+ */
 function rads(x) { return Math.PI * x / 180; }
 
+/**
+ * Get the difference in months between two dates
+ * @param date1
+ * @param date2
+ * @returns the difference in months between the arguments
+ */
 function get_month_diff(date1, date2) {
-	return Math.abs(date1.getMonth() - date2.getMonth());
+	var r = Math.abs(date1.getTime() - date2.getTime());
+	r = parseInt(r/2628000000);
+	return r;
 }
 
 /**
+ * Gets the mouse coordinates in a canvas element
+ * 
+ * This function was taken from http://www.html5canvastutorials.com/advanced/html5-canvas-mouse-coordinates/
+ * accessed on 30th August 2014
+ * 
+ * @param canvas
+ * @param evt
+ * @returns {}
+ */
+function getMousePos(canvas, evt) {
+	var rect = canvas.getBoundingClientRect();
+	return {
+		x: evt.clientX - rect.left,
+		y: evt.clientY - rect.top
+    };
+}
+
+/**
+ * Check whether a point is inside a circle
+ * @param point
+ * @param center
+ * @param radius
+ * @returns {Boolean}
+ */
+function isInside(point, center, radius) {
+	var d = Math.sqrt((point.x - center.x)*(point.x - center.x) + (point.y - center.y)*(point.y - center.y));
+	// Debug: console.log(d, radius);
+	if (d <= radius)
+		return true;
+	return false;
+}
+
+/**
+ * The model for a graph
  * 
  * @param definitions
  * definitions is the following object:
@@ -108,14 +155,14 @@ function Graph(definitions) {
 		
 		//Debug: console.log("this.drawable.w", this.drawable.w, "this.drawable.h", this.drawable.h);
 		
-		/** Initial setup done, let's draw the axis and the backgrounds **/
+		/** Initial setup done, let's draw the axes and the backgrounds **/
 		var context = this.context;
 		context.save();
 		
 		context.translate(0, this.h);
 		context.scale(1, -1);
 		
-		/*The rectangles must be drawn first so the axis overlap its borders */
+		/*The rectangles must be drawn first so the axes overlap its borders */
 		/* The green */
 		context.fillStyle = "#36D936";
 		context.fillRect(this.axisOrigin.x * this.w, (this.axisOrigin.y + this.origin.y) * this.h, (((this.limit.x+1)/2)-this.axisOrigin.x - 0.0125) * this.w, 0.2 * this.drawable.h);
@@ -131,6 +178,24 @@ function Graph(definitions) {
 		/* The red */
 		context.fillStyle = "#FF3F3F";
 		context.fillRect(this.axisOrigin.x * this.w, (this.axisOrigin.y + this.origin.y) * this.h + 0.4 * this.drawable.h, (((this.limit.x+1)/2)-this.axisOrigin.x - 0.0125) * this.w, 0.6 * this.drawable.h);
+		
+		/* Draw the lines of the ages below the whiteish background*/
+		context.beginPath();
+		for (var i = this.origin.x * this.w; i <= this.limit.x * this.w; i += this.xDotDist){
+			//Debug: console.log(i, parseInt(i/this.xDotDist));
+			var age = parseInt(i/this.xDotDist);
+			if (age % 9 == 0 && age - 18 >= 9) {
+				//Debug: console.log("drawn");
+				context.moveTo(i, this.axisOrigin.y * this.h);
+				context.lineTo(i, this.limit.y * this.h);
+			}
+		}
+		context.strokeStyle = "#333";
+		context.lineWidth = 1;
+		context.lineCap = "squared";
+		context.lineJoin = "round";
+		context.stroke();
+		context.closePath();
 		
 		/* Now the nice white-transparent background for the drawing area */
 		context.fillStyle = "rgba(255, 255, 255, 0.7)";
@@ -197,6 +262,17 @@ function Graph(definitions) {
 		context.fillText("Age", 0.022*this.h, 0.02*this.w);
 		context.rotate(-Math.PI/2);
 		context.fillText("Risk of heart desease", 0.015*this.h, -0.01*this.w);
+		context.restore();
+		
+		/* Ages */
+		context.save();
+		for (var i = this.origin.x * this.w; i <= this.limit.x * this.w; i += this.xDotDist){
+			//Debug: console.log(i, parseInt(i/this.xDotDist));
+			var age = parseInt(i/this.xDotDist);
+			if (age % 9 == 0 && age -18 >= 9) {
+				context.fillText(age-18, i - 5, (1-this.axisOrigin.y) * this.h + 14);
+			}
+		}
 		context.restore();
 		
 		/* Captions */
@@ -295,7 +371,6 @@ function Graph(definitions) {
 		context.save();
 		
 		context.translate(this.origin.x * this.w, this.h * (1 - (this.axisOrigin.y + this.origin.y)));
-		
 		//Debug: console.log(this.origin.x * this.w, this.h * (1 - this.origin.y));
 		
 		context.scale(1, -1);
@@ -328,7 +403,6 @@ function Graph(definitions) {
 			*/
 		}
 		
-		
 		context.strokeStyle = settings.color;
 		context.lineWidth = 2;
 		context.stroke();
@@ -355,10 +429,38 @@ function Graph(definitions) {
 	};
 	
 	this.redraw = function() {
-		for ( var i = 0; i < this.drawnFunctions.length; i++) {
+		for ( var i = 0; i < this.drawnFunctions.length ; i++) {
 			this.drawFunction(this.drawnFunctions[i], false);
 			//console.log("redrawing function ", this.drawnFunctions[i]);
 		}
+	};
+
+	this.addHistoryEvent = function(state, func) {
+		var x = this.xDotDist;
+		var y = this.yDotDist;
+		var oxw = (this.origin.x) * this.w;
+		var h = this.h;
+		var h_offset = this.axisOrigin.y;
+
+		this.canvas.addEventListener('mousemove', function (e) {
+			var mouse = getMousePos(this, e);
+			/*mouse.x /= x;
+			mouse.y /= y;*/
+			var center = {
+				x: Math.ceil(oxw + (parseInt(state.age) * x) + 2),
+				y: Math.ceil(h - (func(parseInt(state.age)) * y + h_offset * h)) + 2
+			};
+			
+			/*console.log("Event called");
+			console.log("state", state);
+			console.log('f(x)', func(parseInt(state.age)));
+			console.log("mouse", mouse);
+			console.log("center", center);*/
+			
+			if (isInside(mouse, center, 5))
+				console.log("Hit", state);
+			
+		}, false);
 	};
 }
 
@@ -513,10 +615,6 @@ function parseHash() {
 				location.hash = '#/Title';
 				
 			$("#Result").css("opacity", 1);
-			/**
-			 * TODO Validate to only show the result if the Step 1 has been completed
-			 * TODO Add this new state to the user profile, if logged in
-			 */
 			//Debug: console.log("Result");
 			if ($(".currentStep").length == 0) {
 				$("#Result").fadeIn('slow').addClass("currentStep");
@@ -618,28 +716,30 @@ function parseHash() {
 							}
 						}).done(function(ans) {
 							//Debug: console.log(ans);
+							if (ans.length >= 2) Alert("Please note we are only showing history entries with at least six months from one another.");
 							var last = null;
 							var i = 0;
 							do {
 								var state = ans[i];
-								if (last == null || (last != null && get_month_diff(new Date(last.date), new Date(state.date)) >=2 )) {
-									var date = new Date(state.date);
-									console.log(state, date);
+								if (last == null || (last != null && get_month_diff(new Date(last.date), new Date(state.date)) >= 6 )) {
+									//var date = new Date(state.date);
+									//Debug: console.log(state, date);
+									var func = function(x) {
+										var c = 1;
+										if (parseInt(state.smoker) == 1)
+											c *= 1.7;
+										if (parseInt(state.diabetes) == 1)
+											c *= 1.5;
+										return c * (parseFloat(state.pressure_sys)*x/2000+parseFloat(state.tc_hdl)*x*x/1700 + 2);
+									};
 									graph.drawFunction({
-										f: function(x) {
-											var c = 1;
-											if (parseInt(state.smoker) == 1)
-												c *= 1.7;
-											if (parseInt(state.diabetes) == 1)
-												c *= 1.5;
-											return c * (parseFloat(state.pressure_sys)*x/2000+parseFloat(state.tc_hdl)*x*x/1700 + 2);
-										},
+										f: func,
 										color: '#bfec3b',
 										from: parseInt(state.age),
 										to: parseInt(state.age),
 										drawToday: true
 									}, true);
-									
+									graph.addHistoryEvent(state, func);
 									last = state;
 								}
 							} while (i++ < ans.length - 1);
