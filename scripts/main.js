@@ -127,6 +127,7 @@ function Graph(definitions) {
 	this.drawnFunctions = new Array();
 	this.simulationFunction = null;
 	this.todayFunction = null;
+	this.idealFunction = null;
 	
 	this.ratioWH = definitions.ratioWH;
 	this.ratioHW = 1.0 / this.ratioWH;
@@ -436,6 +437,9 @@ function Graph(definitions) {
 	};
 	
 	this.redraw = function() {
+		if (this.idealFunction != null)
+			this.drawFunction(this.idealFunction, false);
+		
 		if (this.simulationFunction != null)
 			this.drawFunction(this.simulationFunction, false);
 		
@@ -771,42 +775,46 @@ function parseHash() {
 							}
 						}).done(function(ans) {
 							//Debug: console.log(ans);
-							if (ans.length >= 2) Alert("Please note we are only showing history entries with at least six months from one another.");
-							var last = null;
-							var i = 0;
-							do {
-								var state = ans[i];
-								if (last == null || (last != null && get_month_diff(new Date(last.date), new Date(state.date)) >= 6 )) {
-									//var date = new Date(state.date);
-									//Debug: console.log(state, date);
-									state.func = function(x) {
-										var c = 1;
-										
-										if (state.smoker == 1)
-											c *= 1.7;
-										
-										if (state.has_diabetes == 1)
-											c *= 1.5;
-										
-										console.log(state.has_diabetes, 'c', c);
-										return c * (parseFloat(state.pressure_sys)*x/2000+parseFloat(state.tc_hdl)*x*x/1700 + 2);
-									};
-									graph.drawFunction({
-										f: state.func,
-										color: '#bfec3b',
-										from: parseInt(state.age),
-										to: parseInt(state.age),
-										drawToday: true
-									}, true);
-									graph.addHistoryEvent(state);
-									last = state;
-								}
-							} while (i++ < ans.length - 1);
+							if (ans.length > 0) {
+								Alert("Please note we are only showing history entries with at least six months from one another.");
+							
+								var last = null;
+								var i = 0;
+								do {
+									var state = ans[i];
+									if (last == null || (last != null && get_month_diff(new Date(last.date), new Date(state.date)) >= 6 )) {
+										//var date = new Date(state.date);
+										//Debug: console.log(state, date);
+										state.func = function(x) {
+											var c = 1;
+											
+											if (state.smoker == 1)
+												c *= 1.7;
+											
+											if (state.has_diabetes == 1)
+												c *= 1.5;
+											
+											console.log(state.has_diabetes, 'c', c);
+											return c * (parseFloat(state.pressure_sys)*x/2000+parseFloat(state.tc_hdl)*x*x/1700 + 2);
+										};
+										graph.drawFunction({
+											f: state.func,
+											color: '#bfec3b',
+											from: parseInt(state.age),
+											to: parseInt(state.age),
+											drawToday: true
+										}, true);
+										graph.addHistoryEvent(state);
+										last = state;
+									}
+								} while (i++ < ans.length - 1);
+							
 							ideal_begin = last!= null? parseInt(last.age) : 0;
+							}
 							/**
 							 * Draw ideal curve
 							 */
-							graph.drawFunction({
+							var ideal_func = {
 								f: function(x) {
 									return 1 * (120*x/2000+4*x*x/1700 + 2);
 								},
@@ -814,15 +822,17 @@ function parseHash() {
 								from: ((ideal_begin != 0) ? ideal_begin : parseInt(document.getElementById("frm_age").value)),
 								to: 90,
 								drawToday: false
-							}, true);
+							};
+							graph.drawFunction(ideal_func, false);
+							graph.idealFunction = ideal_func;
 						});
 						
 						
 					} else {
 						/**
-						 * Draw ideal curveif the user is not loggedin
+						 * Draw ideal curve if the user is not loggedin
 						 */
-						graph.drawFunction({
+						var ideal_func = {
 							f: function(x) {
 								return 1 * (120*x/2000+4*x*x/1700 + 2);
 							},
@@ -830,7 +840,9 @@ function parseHash() {
 							from: parseInt(document.getElementById("frm_age").value),
 							to: 90,
 							drawToday: false
-						}, true);
+						};
+						graph.drawFunction(ideal_func, false);
+						graph.idealFunction = ideal_func;
 					}
 					
 					
