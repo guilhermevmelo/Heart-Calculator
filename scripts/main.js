@@ -159,8 +159,9 @@ function Graph(definitions) {
 		
 		this.drawable.w = parseInt((this.limit.x - this.origin.x) * this.w);
 		this.drawable.h = parseInt((this.limit.y - (this.axisOrigin.y + this.origin.y)) * this.h);
-		
-		//Debug: console.log("this.drawable.w", this.drawable.w, "this.drawable.h", this.drawable.h);
+
+		this.xDotDist = this.drawable.w/this.resolution.x;
+		this.yDotDist = this.drawable.h/this.resolution.y;
 		
 		/** Initial setup done, let's draw the axes and the backgrounds **/
 		var context = this.context;
@@ -364,13 +365,10 @@ function Graph(definitions) {
 	
 	this.initialize();
 	
-	this.xDotDist = this.drawable.w/this.resolution.x;
-	this.yDotDist = this.drawable.h/this.resolution.y;
-	
 	//Debug: console.log("this.xDotDist", this.xDotDist, "this.yDotDist", this.yDotDist);
 	
 	/*
-	 * {f, color, fromX, toX, drawToday}
+	 * {f, color, fromX, toX, drawToday, addToPool}
 	 */
 	this.drawFunction = function(settings, addToPool) {
 		var context = this.context;
@@ -515,10 +513,7 @@ function Graph(definitions) {
 				} else if (hit_caller === state) {
 					hit_caller = null;
 				}
-					
-				
 			}
-			
 		}, false);
 	};
 }
@@ -599,6 +594,39 @@ function parseHash() {
 				$(".currentStep").fadeOut('slow', function() {
 					$(".currentStep").removeClass("currentStep");
 					$("#SignUp").fadeIn('slow').addClass("currentStep");
+					
+					/**
+					 * The submit handler
+					 */
+					$("#SignUp .nextStepLinkContainer a#SignUpSubmit").click(function() {
+						caller = 'signupsubmit';
+						$("#AlertOverlay").fadeOut('slow');
+						/**
+						 * TODO Form validation before submitting it to action.php
+						 * TODO Add encryption to password before posting it to action.php
+						 */
+						$.ajax({
+							type: 'POST',
+							url: "action.php",
+							data : {
+								q: 'create_user',
+								name: $("#snp_name").val(),
+								email: $("#snp_email").val(),
+								password: $("#snp_password").val(),
+								birthday: valid_date($("#snp_birthday").val()),
+								gender: $(".gender:checked").val(),
+								risk: $(".risk:checked").val()
+							}
+						}).done(function(r) {
+							if (r == "ok") {
+								$("#SignUp").fadeOut('slow', function() {
+									location.hash = "#/SignUpConfirmation";
+								});
+							} else {
+								Alert("An error occurred while trying to create your account.<br>Please check if all your data are correctly input.");
+							}
+						});
+					});
 				});
 			}
 			break;
@@ -900,18 +928,6 @@ function parseHash() {
 			}
 			break;
 		
-		case "#/Profile":
-			//Debug: console.log("Step 1");
-			if ($(".currentStep").length == 0) {
-				$("#Profile").fadeIn('slow').addClass("currentStep");
-			} else if (!$("#Profile").hasClass("currentStep")) {
-				$(".currentStep").fadeOut('slow', function() {
-					$(".currentStep").removeClass("currentStep");
-					$("#Profile").fadeIn('slow').addClass("currentStep");
-				});
-			}
-			break;
-			
 		case "#/Logout":
 			user = null;
 			$.ajax({
@@ -948,6 +964,15 @@ function parseHash() {
 		case "#/SignUpConfirmation":
 			if (caller != 'signupsubmit')
 				location.hash = '#/Title';
+			
+			if ($(".currentStep").length == 0) {
+				$("#SignUpConfirmation").fadeIn('slow').addClass("currentStep");
+			} else if (!$("#SignUpConfirmation").hasClass("currentStep")) {
+				$(".currentStep").fadeOut('slow', function() {
+					$(".currentStep").removeClass("currentStep");
+					$("#SignUpConfirmation").delay(100).fadeIn('slow').addClass("currentStep");
+				});
+			}
 			break;	
 		
 		default:
@@ -999,39 +1024,6 @@ $(window).load(function() {
 		caller = 'step1';
 	});
 	
-	/**
-	 * The submit handler
-	 */
-	$("#SignUp .nextStepLinkContainer a#SignUpSubmit").click(function() {
-		caller = 'signupsubmit';
-		$("#AlertOverlay").fadeOut('slow');
-		/**
-		 * TODO Form validation before submitting it to action.php
-		 * TODO Add encryption to password before posting it to action.php
-		 */
-		$.ajax({
-			type: 'POST',
-			url: "action.php",
-			data : {
-				q: 'create_user',
-				name: $("#snp_name").val(),
-				email: $("#snp_email").val(),
-				password: $("#snp_password").val(),
-				birthday: valid_date($("#snp_birthday").val()),
-				gender: $(".gender:checked").val(),
-				risk: $(".risk:checked").val()
-			}
-		}).done(function(r) {
-			if (r == "ok") {
-				$("#SignUp").fadeOut('slow', function() {
-					$("#SignUpConfirmation").fadeIn('slow').addClass("currentStep");
-				});
-			} else {
-				Alert("An error occurred while trying to create your account.<br>Please check if all your data are correctly input.");
-			}
-		});
-	});
-		
 	/** While styling the canvas **/
 	graph.initialize();
 	graph.redraw();
