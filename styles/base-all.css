@@ -434,8 +434,6 @@ section {
 		width: auto;
 		position: static;
 		opacity: 1;
-		/*left: 0;
-		top: -60px;*/
 	}
 	
 	#Title {
@@ -461,11 +459,7 @@ section {
 }
 
 @media all and (max-width: 380px) {
-	#Login {
-		width: auto;
-	}
-	
-	#Alert {
+	#Login, #Alert {
 		width: auto;
 	}
 }
