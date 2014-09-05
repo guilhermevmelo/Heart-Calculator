@@ -125,6 +125,7 @@ function Graph(definitions) {
 	this.canvas = document.getElementById(definitions.canvasId);
 	this.context = this.canvas.getContext("2d");
 	this.drawnFunctions = new Array();
+	this.drawnStates = new Array();
 	this.simulationFunction = null;
 	this.todayFunction = null;
 	this.idealFunction = null;
@@ -450,7 +451,8 @@ function Graph(definitions) {
 			this.drawFunction(this.todayFunction, false);
 	};
 	
-	this.drawHistoryState = function(state) {
+	this.drawHistoryState = function(state_number) {
+		var state = this.drawnStates[state_number];
 		var context = this.context;
 		context.save();
 		context.beginPath();
@@ -479,6 +481,8 @@ function Graph(definitions) {
 	};
 	
 	this.addHistoryEvent = function(state) {
+		this.drawnStates.push(state);
+		var cur_state = this.drawnStates.length - 1;
 		var x = this.xDotDist;
 		var y = this.yDotDist;
 		var oxw = (this.origin.x) * this.w;
@@ -504,8 +508,8 @@ function Graph(definitions) {
 				//Debug: console.log("Hit");
 				graph.initialize();
 				graph.redraw();
-				graph.drawHistoryState(state);
-				 hit_caller = state;
+				graph.drawHistoryState(cur_state);
+				hit_caller = state;
 			} else{
 				if (hit_caller == null) {
 					graph.initialize();
@@ -549,7 +553,7 @@ function parseHash() {
 			if ($(".currentStep").length == 0) {
 				$("#LoginOverlay").fadeIn('slow').addClass("currentStep");
 			} else if (!$("#LoginOverlay").hasClass("currentStep")) {
-				$(".currentStep").fadeOut('slow', function() {
+				$(".currentStep").fadeOut('slow', function() {	
 					$(".currentStep").removeClass("currentStep");
 					$("#LoginOverlay").delay(100).fadeIn('slow').addClass("currentStep");
 				});
@@ -731,27 +735,26 @@ function parseHash() {
 						$("#wif_bp_val").html($("#wif_bp").val());
 						$("#fld_bp").delay(300*delay++).fadeIn('fast');
 						
-						if(user != null)
-							$("#saveLink").show();
+						if (user!=null) {
+							/**
+							 * Add this state to the history
+							 */
+							$.ajax({
+								url: 'action.php',
+								type: 'POST',
+								data: {
+									'q': 'saveState',
+									'tc_hdl': $('#frm_tc_hdl').val(),
+									'smoker': $('[name="frm_smoke"]:checked').val(),
+									'has_diabetes': $('[name="frm_diabetes"]:checked').val(),
+									'pressure_sys': $('#frm_bp_sys').val(),
+									'pressure_dia': $('#frm_bp_dia').val()
+								}
+							});
+						}
 						
 						$("#Result .nextStepLinkContainer a").click(function() {
 							$("#WhatIf fieldset").hide();
-						});
-						
-						/**
-						 * Add this state to the history
-						 */
-						$.ajax({
-							url: 'action.php',
-							type: 'POST',
-							data: {
-								'q': 'saveState',
-								'tc_hdl': $('#frm_tc_hdl').val(),
-								'smoker': $('[name="frm_smoke"]:checked').val(),
-								'has_diabetes': $('[name="frm_diabetes"]:checked').val(),
-								'pressure_sys': $('#frm_bp_sys').val(),
-								'pressure_dia': $('#frm_bp_dia').val()
-							}
 						});
 						
 						/**
@@ -764,13 +767,13 @@ function parseHash() {
 									var a = parseFloat($("#wif_bp").val());
 									var b = parseFloat($("#wif_tc_hdl").val());
 									var c = 1;
-									if ($("#wif_startSmoke").is(":checked"))
+									if ($("#wif_startSmoke").is(":checked") || $("#frm_smoke_y").is(":checked"))
 										c *= 1.7;
 										
 									if ($("#wif_stopSmoke").is(":checked"))
 										c *= 0.58;
 										
-									if ($("#wif_diabetes").is(":checked")|| $("#frm_diabetes").is(":checked"))
+									if ($("#wif_diabetes").is(":checked")|| $("#frm_diabetes_y").is(":checked"))
 										c *= 1.5;
 									
 									//Debug: console.log('a', a, 'b', b);
@@ -790,9 +793,23 @@ function parseHash() {
 					//graph.redraw();
 					
 					/**
+					 * Draw ideal curve
+					 */
+					var ideal_func = {
+						f: function(x) {
+							return 1 * (120*x/2000+4*x*x/1700 + 2);
+						},
+						color: '#36b0d9',
+						from: 10,
+						to: 90,
+						drawToday: false
+					};
+					graph.drawFunction(ideal_func, false);
+					graph.idealFunction = ideal_func;
+					
+					/**
 					 * Draw History
 					 */
-					var ideal_begin = 0;
 					if (user != null) {
 						$.ajax({
 							url: 'action.php',
@@ -822,7 +839,7 @@ function parseHash() {
 											if (state.has_diabetes == 1)
 												c *= 1.5;
 											
-											console.log(state.has_diabetes, 'c', c);
+											//Debug: console.log(state.has_diabetes, 'c', c);
 											return c * (parseFloat(state.pressure_sys)*x/2000+parseFloat(state.tc_hdl)*x*x/1700 + 2);
 										};
 										graph.drawFunction({
@@ -836,41 +853,8 @@ function parseHash() {
 										last = state;
 									}
 								} while (i++ < ans.length - 1);
-							
-							ideal_begin = last!= null? parseInt(last.age) : 0;
 							}
-							/**
-							 * Draw ideal curve
-							 */
-							var ideal_func = {
-								f: function(x) {
-									return 1 * (120*x/2000+4*x*x/1700 + 2);
-								},
-								color: '#36b0d9',
-								from: ((ideal_begin != 0) ? ideal_begin : parseInt(document.getElementById("frm_age").value)),
-								to: 90,
-								drawToday: false
-							};
-							graph.drawFunction(ideal_func, false);
-							graph.idealFunction = ideal_func;
 						});
-						
-						
-					} else {
-						/**
-						 * Draw ideal curve if the user is not loggedin
-						 */
-						var ideal_func = {
-							f: function(x) {
-								return 1 * (120*x/2000+4*x*x/1700 + 2);
-							},
-							color: '#36b0d9',
-							from: parseInt(document.getElementById("frm_age").value),
-							to: 90,
-							drawToday: false
-						};
-						graph.drawFunction(ideal_func, false);
-						graph.idealFunction = ideal_func;
 					}
 					
 					
@@ -976,7 +960,7 @@ function parseHash() {
 			break;	
 		
 		default:
-			console.log("Called default");
+			//Debug: console.log("Called default");
 			location.hash = "#/Title";
 			break;
 	}
