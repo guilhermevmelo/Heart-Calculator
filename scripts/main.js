@@ -55,6 +55,13 @@ function valid_date(date) {
 	return false;
 }
 
+function valid_email(email) {
+	var email_pattern = new RegExp(/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$/);
+	if (email_pattern.test(email))
+		return true;
+	return false;
+}
+
 /**
  * Converts degrees into radians
  * @param x
@@ -369,7 +376,7 @@ function Graph(definitions) {
 	//Debug: console.log("this.xDotDist", this.xDotDist, "this.yDotDist", this.yDotDist);
 	
 	/*
-	 * {f, color, fromX, toX, drawToday, addToPool}
+	 * {f, colour, fromX, toX, drawToday, addToPool}
 	 */
 	this.drawFunction = function(settings, addToPool) {
 		var context = this.context;
@@ -530,6 +537,89 @@ function validate() {
 		$("#btn_ShowResult").fadeIn('slow');
 }
 
+function signupHandler() {
+	/**
+	 * The submit handler
+	 */
+	$("#SignUp .nextStepLinkContainer a#SignUpSubmit").click(function() {
+		caller = 'signupsubmit';
+		$("#AlertOverlay").fadeOut('slow');
+		/**
+		 * TODO Add encryption to password before posting it to action.php
+		 */
+		
+		/**
+		 * Let's do some validation before we send the form.
+		 */
+		var allright = true;
+		/* Check if the email supplied is already used */
+		$.ajax({
+			type: 'GET',
+			url: 'action.php',
+			data: {
+				q: 'checkEmail',
+				email: $("#snp_email").val()
+			}
+		}).done(function(ans) {
+			if (ans == 'true') {
+				allright = false;
+				Alert("The email supplied is already registered. Please choose another.");
+			} else {
+				/** Now check field validity */
+				if($("#snp_email").val().length == 0 ||
+				   $("#snp_name").val().length == 0 ||
+				   $("#snp_password").val().length == 0 ||
+				   $("#snp_birthday").val().length == 0 ||
+				   $("input[name=snp_risk]:checked").length == 0 ||
+				   $("input[name=snp_gender]:checked").length == 0) {
+					allright = false;
+					Alert("All the fields are required. Please fill them all in.");
+				} else {
+					/** Now we check email and date formats **/
+					if (!valid_date($("#snp_birthday").val())) {
+						allright = false;
+						Alert("Please enter a valid birthday. It should be in the dd/mm/yyyy format.");
+					} else {
+						if (!valid_email($("#snp_email").val())) {
+							allright = false;
+							Alert("Please enter a valid email address.");
+						} else {
+							if (allright === true) {
+								$.ajax({
+									type: 'POST',
+									url: "action.php",
+									data : {
+										q: 'create_user',
+										name: $("#snp_name").val(),
+										email: $("#snp_email").val(),
+										password: $("#snp_password").val(),
+										birthday: valid_date($("#snp_birthday").val()),
+										gender: $(".gender:checked").val(),
+										risk: $(".risk:checked").val()
+									}
+								}).done(function(r) {
+									if (r == "ok") {
+										$("#SignUp").fadeOut('slow', function() {
+											location.hash = "#/SignUpConfirmation";
+										});
+									} else {
+										Alert("An error occurred while trying to create your account.<br>Please check if all your data are correctly input.");
+									}
+								});
+							}
+						}
+					}
+					
+					
+				}
+			}
+		});
+		
+		
+		
+	});
+}
+
 /**
  * Hash control
  */
@@ -594,43 +684,13 @@ function parseHash() {
 			//Debug: console.log("SignUp");
 			if ($(".currentStep").length == 0) {
 				$("#SignUp").fadeIn('slow').addClass("currentStep");
+				signupHandler();
 			} else if (!$("#SignUp").hasClass("currentStep")) {
 				$(".currentStep").fadeOut('slow', function() {
 					$(".currentStep").removeClass("currentStep");
 					$("#SignUp").fadeIn('slow').addClass("currentStep");
 					
-					/**
-					 * The submit handler
-					 */
-					$("#SignUp .nextStepLinkContainer a#SignUpSubmit").click(function() {
-						caller = 'signupsubmit';
-						$("#AlertOverlay").fadeOut('slow');
-						/**
-						 * TODO Form validation before submitting it to action.php
-						 * TODO Add encryption to password before posting it to action.php
-						 */
-						$.ajax({
-							type: 'POST',
-							url: "action.php",
-							data : {
-								q: 'create_user',
-								name: $("#snp_name").val(),
-								email: $("#snp_email").val(),
-								password: $("#snp_password").val(),
-								birthday: valid_date($("#snp_birthday").val()),
-								gender: $(".gender:checked").val(),
-								risk: $(".risk:checked").val()
-							}
-						}).done(function(r) {
-							if (r == "ok") {
-								$("#SignUp").fadeOut('slow', function() {
-									location.hash = "#/SignUpConfirmation";
-								});
-							} else {
-								Alert("An error occurred while trying to create your account.<br>Please check if all your data are correctly input.");
-							}
-						});
-					});
+					signupHandler();
 				});
 			}
 			break;
@@ -713,6 +773,7 @@ function parseHash() {
 				$(".currentStep").fadeOut('slow', function() {
 					$(".currentStep").removeClass("currentStep");
 					$("#Result").fadeIn('slow', function() {
+						
 						/**
 						 * Dynamically show and fill prediction controllers
 						 * after the section has faded in
@@ -832,17 +893,21 @@ function parseHash() {
 										//Debug: console.log(state, date);
 										state.func = function(x) {
 											var c = 1;
-											
-											if (state.smoker == 1)
+											console.log(this, state);
+											if (this.smoker == 1)
 												c *= 1.7;
 											
-											if (state.has_diabetes == 1)
+											if (this.has_diabetes == 1)
 												c *= 1.5;
 											
 											//Debug: console.log(state.has_diabetes, 'c', c);
 											return c * (parseFloat(state.pressure_sys)*x/2000+parseFloat(state.tc_hdl)*x*x/1700 + 2);
 										};
+										
 										graph.drawFunction({
+											smoker: state.smoker,
+											has_diabetes: state.has_diabetes,
+											
 											f: state.func,
 											color: '#bfec3b',
 											from: parseInt(state.age),
@@ -925,7 +990,7 @@ function parseHash() {
 				user = null;
 				location.hash = "#/Title";
 			});
-			graph.drawnFunction = new Array();
+			graph.drawnFunctions = new Array();
 			break;
 		
 		case "#/Confirm":

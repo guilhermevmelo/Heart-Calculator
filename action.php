@@ -5,6 +5,7 @@
  */
 
 session_start();
+if (!isset($_SESSION["access"])) $_SESSION["access"] = "deny";
 require_once 'classes/User.DAO.class.php';
 require_once 'classes/UserState.DAO.class.php';
 require_once 'classes/functions.php';
@@ -171,5 +172,17 @@ if (isset($q) && $q == 'getHistory') {
 	header("Content-Type: application/json");
 	$usDAO = new UserStateDAO();
 	echo json_encode($usDAO->readAllFromUser(intval($_GET["id_user"])));
+}
+
+/**
+ * Check whether an email address is already registered or not
+ */
+if (isset($q) && $q == 'checkEmail') {
+	$uDAO = new UserDAO();
+	$u = $uDAO->readByEmail(addslashes($_GET["email"]));
+	if ($u == FALSE)
+		echo "false"; // there is no one with that email
+	else
+		echo "true"; // someone has already registered with that email
 }
 ?>
